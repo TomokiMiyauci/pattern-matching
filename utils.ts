@@ -1,7 +1,14 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import type { MatchedResult, MatchResult, UnmatchedResult } from "./types.ts";
+import { identifier, rest } from "./constants.ts";
+import type {
+  Identifier,
+  MatchedResult,
+  MatchResult,
+  Rest,
+  UnmatchedResult,
+} from "./types.ts";
 import { isConstructor, sameValue } from "./ecma.ts";
 
 export function createMatchResult<R>(matched: true, value: R): MatchedResult<R>;
@@ -34,3 +41,13 @@ export function matchConstructorInstance<T extends object>(
 
   return matchConstructorInstance(obj, target, intrinsicName);
 }
+
+export function $<T extends string>(name: T): Identifier<T> {
+  return { [identifier]: name };
+}
+
+$[identifier] = false as const;
+
+export const $$: Rest = {
+  [rest]: "",
+};

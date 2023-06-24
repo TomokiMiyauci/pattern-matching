@@ -1,7 +1,7 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { identifier, matcher } from "./constants.ts";
+import { identifier, matcher, rest } from "./constants.ts";
 
 export type MatchResult<T> = MatchedResult<T> | UnmatchedResult;
 
@@ -33,9 +33,13 @@ export type Pattern<T = unknown, R = unknown> =
   | null
   | RegExp
   | { [k: PropertyKey]: Pattern | Identifier }
-  | (Pattern | undefined | Identifier)[]
+  | ArrayPattern
   | Matchable<T, R>;
 // | LazyPattern<T, R>;
+
+export type ArrayPattern = Item[] | [...Item[], Rest];
+
+export type Item = Pattern | undefined | Identifier;
 
 export interface LazyPattern<T, R> {
   (matchable: unknown): Pattern<T, R>;
@@ -43,4 +47,8 @@ export interface LazyPattern<T, R> {
 
 export interface Identifier<T extends string | false = string | false> {
   [identifier]: T;
+}
+
+export interface Rest {
+  [rest]: "";
 }

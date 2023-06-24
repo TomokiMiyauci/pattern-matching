@@ -1,9 +1,16 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { identifier, matcher } from "./constants.ts";
-import { isObject as _isObject } from "./deps.ts";
-import type { Identifier, Matchable, Pattern } from "./types.ts";
+import { identifier, matcher, rest } from "./constants.ts";
+import { destLast, filterKeys, isObject as _isObject } from "./deps.ts";
+import type {
+  ArrayPattern,
+  Identifier,
+  Item,
+  Matchable,
+  Pattern,
+  Rest,
+} from "./types.ts";
 import { sameValue } from "./ecma.ts";
 
 export class NearLiteralMatchPattern {
@@ -26,12 +33,16 @@ interface Env {
 export class ArrayObjectMatchPattern {
   static match(
     this: Env,
-    pattern: readonly (Pattern | undefined | Identifier)[],
+    pattern: ArrayPattern,
     matchable: unknown,
   ): boolean {
     if (!Array.isArray(matchable)) return false;
 
-    return pattern.every((value, i) => {
+    const [heads, last] = destLast(pattern);
+    const is = isObject(last) && isRest(last);
+    const items = (is ? heads : pattern) as Item[];
+
+    const result = items.every((value, i) => {
       if (!Reflect.has(matchable, i)) return false;
 
       if (value === undefined) return true;
@@ -45,6 +56,19 @@ export class ArrayObjectMatchPattern {
 
       return matchPattern.call(this, value, v);
     });
+
+    if (!result) return false;
+    if (!is) return true;
+
+    const keys = [...heads.keys()].map(String);
+    const obj = filterKeys(
+      matchable as Record<number, unknown>,
+      (key) => !keys.includes(key),
+    );
+
+    this.binding.set(heads.length, obj);
+
+    return true;
   }
 }
 
@@ -129,6 +153,11 @@ function invokeCustomMatcher<T, U>(
 // deno-lint-ignore ban-types
 function isIdentifier(object: object): object is Identifier {
   return identifier in object;
+}
+
+// deno-lint-ignore ban-types
+function isRest(object: object): object is Rest {
+  return rest in object;
 }
 
 // deno-lint-ignore ban-types
