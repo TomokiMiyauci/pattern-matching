@@ -1,9 +1,9 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { matcher } from "./constants.ts";
-import { isObject } from "./deps.ts";
-import type { Matchable, Pattern } from "./types.ts";
+import { identifier, matcher } from "./constants.ts";
+import { isObject as _isObject } from "./deps.ts";
+import type { Identifier, Matchable, Pattern } from "./types.ts";
 import { sameValue } from "./ecma.ts";
 
 export class NearLiteralMatchPattern {
@@ -19,9 +19,14 @@ export class NearLiteralMatchPattern {
   }
 }
 
+interface Env {
+  binding: Map<string | number, unknown>;
+}
+
 export class ArrayObjectMatchPattern {
   static match(
-    pattern: readonly Pattern[],
+    this: Env,
+    pattern: readonly (Pattern | undefined | Identifier)[],
     matchable: unknown,
   ): boolean {
     if (!Array.isArray(matchable)) return false;
@@ -29,14 +34,24 @@ export class ArrayObjectMatchPattern {
     return pattern.every((value, i) => {
       if (!Reflect.has(matchable, i)) return false;
 
-      return matchPattern(value, Reflect.get(matchable, i));
+      if (value === undefined) return true;
+
+      const v = Reflect.get(matchable, i);
+
+      if (isObject(value) && isIdentifier(value)) {
+        this.binding.set(i, v);
+        return true;
+      }
+
+      return matchPattern.call(this, value, v);
     });
   }
 }
 
 export class ObjectMatchPattern {
   static match(
-    pattern: Record<PropertyKey, Pattern>,
+    this: Env,
+    pattern: Record<PropertyKey, Pattern | Identifier>,
     matchable: unknown,
   ): boolean {
     if (!isObject(matchable)) return false;
@@ -44,12 +59,20 @@ export class ObjectMatchPattern {
     return Object.entries(pattern).every(([key, value]) => {
       if (!Reflect.has(matchable, key)) return false;
 
-      return matchPattern(value, Reflect.get(matchable, key));
+      const v = Reflect.get(matchable, key);
+
+      if (isObject(value) && isIdentifier(value)) {
+        this.binding.set(key, v);
+        return true;
+      }
+
+      return matchPattern.call(this, value, Reflect.get(matchable, key));
     });
   }
 }
 
 export function matchPattern(
+  this: Env,
   pattern: Pattern,
   matchable: unknown,
 ): boolean {
@@ -72,10 +95,10 @@ export function matchPattern(
       }
 
       if (Array.isArray(pattern)) {
-        return ArrayObjectMatchPattern.match(pattern, matchable);
+        return ArrayObjectMatchPattern.match.call(this, pattern, matchable);
       }
 
-      return ObjectMatchPattern.match(pattern, matchable);
+      return ObjectMatchPattern.match.call(this, pattern, matchable);
     }
 
     default: {
@@ -101,4 +124,14 @@ function invokeCustomMatcher<T, U>(
   if (!result.matched) return notMatched;
 
   return result.value;
+}
+
+// deno-lint-ignore ban-types
+function isIdentifier(object: object): object is Identifier {
+  return identifier in object;
+}
+
+// deno-lint-ignore ban-types
+function isObject(input: unknown): input is object {
+  return _isObject(input) || typeof input === "function";
 }
