@@ -45,10 +45,16 @@ export function when<const T, R, U, const This = void>(
   callback: (
     this: T,
     matched: {
-      [k in keyof This as This[k] extends Identifier | Rest ? k : never]:
-        This[k] extends Rest ? Omit<T, Exclude<keyof This, k>>
-          : T extends Record<k, infer X> ? X
-          : unknown;
+      [
+        k in keyof This as This[k] extends Identifier | Rest
+          ? This[k] extends
+            Identifier<infer X extends string> | Rest<infer X extends string>
+            ? X
+          : k
+          : never
+      ]: This[k] extends Rest ? Omit<T, Exclude<keyof This, k>>
+        : T extends Record<k, infer X> ? X
+        : unknown;
     },
   ) => U,
 ): Matcher<T, U> {

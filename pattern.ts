@@ -8,6 +8,7 @@ import type {
   Identifier,
   Item,
   Matchable,
+  ObjectPattern,
   Pattern,
   Rest,
 } from "./types.ts";
@@ -75,23 +76,38 @@ export class ArrayObjectMatchPattern {
 export class ObjectMatchPattern {
   static match(
     this: Env,
-    pattern: Record<PropertyKey, Pattern | Identifier>,
+    pattern: ObjectPattern,
     matchable: unknown,
   ): boolean {
     if (!isObject(matchable)) return false;
 
-    return Object.entries(pattern).every(([key, value]) => {
+    const { "...": $$, ...restPattern } = pattern;
+
+    const hasRest = isObject($$) && isRest($$);
+
+    pattern = hasRest ? restPattern : pattern;
+
+    const result = Object.entries(pattern).every(([key, value]) => {
       if (!Reflect.has(matchable, key)) return false;
 
-      const v = Reflect.get(matchable, key);
+      const actValue = Reflect.get(matchable, key);
 
       if (isObject(value) && isIdentifier(value)) {
-        this.binding.set(key, v);
+        this.binding.set(key, actValue);
         return true;
       }
 
-      return matchPattern.call(this, value, Reflect.get(matchable, key));
+      return matchPattern.call(this, value, actValue);
     });
+
+    if (!result || !hasRest) return result;
+
+    const name = $$[rest];
+    const keys = Object.keys(pattern);
+    const obj = filterKeys({ ...matchable }, (key) => !keys.includes(key));
+    this.binding.set(name, obj);
+
+    return true;
   }
 }
 

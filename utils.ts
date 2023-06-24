@@ -48,6 +48,13 @@ export function $<T extends string>(name: T): Identifier<T> {
 
 $[identifier] = false as const;
 
-export const $$: Rest = {
-  [rest]: "",
-};
+export interface RenameableRest extends Function {
+  <const T extends string>(name: T): Rest<T>;
+  [rest]: undefined;
+}
+
+export const $$: RenameableRest = ((name: string) => {
+  return { [rest]: name };
+}) as RenameableRest;
+
+$$[rest] = undefined;

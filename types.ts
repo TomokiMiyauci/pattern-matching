@@ -32,12 +32,16 @@ export type Pattern<T = unknown, R = unknown> =
   | boolean
   | null
   | RegExp
-  | { [k: PropertyKey]: Pattern | Identifier }
+  | ObjectPattern
   | ArrayPattern
   | Matchable<T, R>;
 // | LazyPattern<T, R>;
 
 export type ArrayPattern = Item[] | [...Item[], Rest];
+
+export type ObjectPattern =
+  | { [k: PropertyKey]: Pattern | Identifier }
+  | { "...": Rest<string> };
 
 export type Item = Pattern | undefined | Identifier;
 
@@ -49,6 +53,6 @@ export interface Identifier<T extends string | false = string | false> {
   [identifier]: T;
 }
 
-export interface Rest {
-  [rest]: "";
+export interface Rest<T extends string | undefined = string | undefined> {
+  [rest]: T;
 }
