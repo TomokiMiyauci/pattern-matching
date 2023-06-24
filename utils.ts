@@ -42,19 +42,22 @@ export function matchConstructorInstance<T extends object>(
   return matchConstructorInstance(obj, target, intrinsicName);
 }
 
-export function $<T extends string>(name: T): Identifier<T> {
-  return { [identifier]: name };
+export const $: RenameableIdentifier =
+  ((name: string) => ({ [identifier]: name })) as RenameableIdentifier;
+
+export interface RenameableIdentifier {
+  <const T extends string>(name: T): Identifier<T>;
+  [identifier]: undefined;
 }
 
-$[identifier] = false as const;
+$[identifier] = undefined;
 
 export interface RenameableRest extends Function {
   <const T extends string>(name: T): Rest<T>;
   [rest]: undefined;
 }
 
-export const $$: RenameableRest = ((name: string) => {
-  return { [rest]: name };
-}) as RenameableRest;
+export const $$: RenameableRest =
+  ((name: string) => ({ [rest]: name })) as RenameableRest;
 
 $$[rest] = undefined;

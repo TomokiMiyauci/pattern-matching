@@ -51,7 +51,8 @@ export class ArrayObjectMatchPattern {
       const v = Reflect.get(matchable, i);
 
       if (isObject(value) && isIdentifier(value)) {
-        this.binding.set(i, v);
+        const key = value[identifier] ?? i;
+        this.binding.set(key, v);
         return true;
       }
 
@@ -93,6 +94,7 @@ export class ObjectMatchPattern {
       const actValue = Reflect.get(matchable, key);
 
       if (isObject(value) && isIdentifier(value)) {
+        key = value[identifier] ?? key;
         this.binding.set(key, actValue);
         return true;
       }
