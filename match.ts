@@ -4,7 +4,7 @@
 import { destLast } from "./deps.ts";
 import type { MatchedResult, Matcher } from "./types.ts";
 
-export function match<T>(
+export function match<const T>(
   matchable: T,
 ): <R>(
   ...matchers: [...Matcher<T, R>[], (matchable: T) => MatchedResult<R>]
