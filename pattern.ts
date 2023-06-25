@@ -12,24 +12,32 @@ import type {
   ArrayPattern,
   Env,
   Identifier,
-  Item,
   Matchable,
   ObjectPattern,
   Pattern,
+  PatternItem,
   Rest,
 } from "./types.ts";
 import { sameValue } from "./ecma.ts";
 
-export class NearLiteralMatchPattern {
-  static match(
-    pattern: string | bigint | number | boolean | null | RegExp,
-    matchable: unknown,
-  ): boolean {
-    if (pattern instanceof RegExp) {
-      return pattern.test(String(matchable));
-    } else {
-      return sameValue(matchable, pattern);
+export function matchNearLiteral(
+  this: Env,
+  pattern: string | bigint | number | boolean | null | RegExp,
+  matchable: unknown,
+): boolean {
+  if (pattern instanceof RegExp) {
+    const result = pattern.exec(String(matchable));
+
+    if (!result) return false;
+    if (!result.groups) return true;
+
+    for (const [name, value] of Object.entries(result.groups)) {
+      this.binding.set(name, value);
     }
+
+    return true;
+  } else {
+    return sameValue(matchable, pattern);
   }
 }
 
@@ -110,7 +118,7 @@ export function matchPattern(
   matchable: unknown,
 ): boolean {
   if (pattern === null) {
-    return NearLiteralMatchPattern.match(pattern, matchable);
+    return matchNearLiteral.call(this, pattern, matchable);
   }
 
   switch (typeof pattern) {
@@ -124,7 +132,7 @@ export function matchPattern(
       }
 
       if (pattern instanceof RegExp) {
-        return NearLiteralMatchPattern.match(pattern, matchable);
+        return matchNearLiteral.call(this, pattern, matchable);
       }
 
       if (Array.isArray(pattern)) {
@@ -135,7 +143,7 @@ export function matchPattern(
     }
 
     default: {
-      return NearLiteralMatchPattern.match(pattern, matchable);
+      return matchNearLiteral.call(this, pattern, matchable);
     }
   }
 }
@@ -176,7 +184,7 @@ export function isObject(input: unknown): input is object {
 
 function matchElement(
   this: Env,
-  item: Item | Rest,
+  item: PatternItem | Rest,
   matchable: unknown,
   i: number,
 ): boolean {
