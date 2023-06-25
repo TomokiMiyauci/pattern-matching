@@ -22,7 +22,7 @@ import { sameValue } from "./ecma.ts";
 
 export function matchNearLiteral(
   this: Env,
-  pattern: string | bigint | number | boolean | null | RegExp,
+  pattern: string | bigint | number | boolean | null | undefined | RegExp,
   matchable: unknown,
 ): boolean {
   if (pattern instanceof RegExp) {
@@ -188,8 +188,6 @@ function matchElement(
   matchable: unknown,
   i: number,
 ): boolean {
-  if (item === undefined) return true;
-
   if (isObject(item)) {
     if (isIdentifier(item)) {
       const key = item[identifier] ?? i;
