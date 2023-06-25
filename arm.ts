@@ -1,14 +1,16 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
+import { UnionToIntersection } from "./deps.ts";
 import { createMatchResult } from "./utils.ts";
 import { matchPattern } from "./pattern.ts";
 import type {
+  ArrayPattern,
   Identifier,
   MatchedResult,
   Matcher,
+  ObjectPattern,
   Pattern,
-  Rest,
 } from "./types.ts";
 
 export function whether<T, R, A extends T = T>(
@@ -40,28 +42,33 @@ export function otherwise<T, R>(
   return (matchable) => createMatchResult(true, callback(matchable));
 }
 
-export function when<const T, R, U, const This = void>(
-  pattern: Pattern<unknown, R> & This,
-  callback: (
-    this: T,
-    matched: {
-      [
-        k in keyof This as This[k] extends Identifier | Rest
-          ? This[k] extends
-            Identifier<infer X extends string> | Rest<infer X extends string>
-            ? X
-          : k
-          : never
-      ]: This[k] extends Rest ? Omit<T, Exclude<keyof This, k>>
-        : T extends Record<k, infer X> ? X
-        : unknown;
-    },
-  ) => U,
+export type Binding<T, P extends Pattern> = unknown extends
+  UnionToIntersection<_Binding<T, P>> ? never
+  : UnionToIntersection<_Binding<T, P>>;
+
+export type _Binding<T, P extends Pattern> = P extends string ? never
+  : P extends RegExp ? Record<string, string>
+  : P extends ObjectPattern ? {
+      [k in keyof P]: P[k] extends Identifier ? { [ka in k]: unknown }
+        : P[k] extends infer X extends Pattern ? _Binding<T, X>
+        : never;
+    }[keyof P]
+  : P extends ArrayPattern ? {
+      [k in keyof P]: P[k] extends Identifier ? { [ka in k]: unknown }
+        : P[k] extends infer X extends Pattern ? _Binding<T, X>
+        : never;
+    }[number]
+  : never;
+
+export function when<T, P extends Pattern<unknown, unknown>, U>(
+  pattern: P,
+  callback: (this: T, matched: Binding<T, P>) => U,
 ): Matcher<T, U> {
   return function (matchable) {
     if (matchPattern.call(this, pattern, matchable)) {
       return createMatchResult(
         true,
+        // deno-lint-ignore no-explicit-any
         callback.call(matchable, Object.fromEntries(this.binding) as any),
       );
     }
