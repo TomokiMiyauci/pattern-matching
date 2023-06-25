@@ -58,13 +58,11 @@ export function when<const T, R, U, const This = void>(
     },
   ) => U,
 ): Matcher<T, U> {
-  const env = { binding: new Map() };
-
-  return (matchable) => {
-    if (matchPattern.call(env, pattern, matchable)) {
+  return function (matchable) {
+    if (matchPattern.call(this, pattern, matchable)) {
       return createMatchResult(
         true,
-        callback.call(matchable, Object.fromEntries(env.binding)),
+        callback.call(matchable, Object.fromEntries(this.binding) as any),
       );
     }
 

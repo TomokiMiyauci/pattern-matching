@@ -2,9 +2,15 @@
 // This module is browser compatible.
 
 import { identifier, matcher, rest } from "./constants.ts";
-import { destLast, filterKeys, isObject as _isObject } from "./deps.ts";
+import {
+  EmplaceableMap,
+  filterKeys,
+  isIterable,
+  isObject as _isObject,
+} from "./deps.ts";
 import type {
   ArrayPattern,
+  Env,
   Identifier,
   Item,
   Matchable,
@@ -27,48 +33,33 @@ export class NearLiteralMatchPattern {
   }
 }
 
-interface Env {
-  binding: Map<string | number, unknown>;
-}
-
 export class ArrayObjectMatchPattern {
   static match(
     this: Env,
     pattern: ArrayPattern,
     matchable: unknown,
   ): boolean {
-    if (!Array.isArray(matchable)) return false;
+    if (!isIterable(matchable)) return false;
 
-    const [heads, last] = destLast(pattern);
-    const is = isObject(last) && isRest(last);
-    const items = (is ? heads : pattern) as Item[];
-
-    const result = items.every((value, i) => {
-      if (!Reflect.has(matchable, i)) return false;
-
-      if (value === undefined) return true;
-
-      const v = Reflect.get(matchable, i);
-
-      if (isObject(value) && isIdentifier(value)) {
-        const key = value[identifier] ?? i;
-        this.binding.set(key, v);
-        return true;
-      }
-
-      return matchPattern.call(this, value, v);
+    const iterator = matchable[Symbol.iterator]();
+    const map = this.cache.emplace(iterator, {
+      insert: () => new EmplaceableMap(),
     });
+    const handler = { insert: () => iterator.next() };
 
-    if (!result) return false;
-    if (!is) return true;
+    for (const [i, value] of pattern.entries()) {
+      const result = map.emplace(i, handler);
 
-    const keys = [...heads.keys()].map(String);
-    const obj = filterKeys(
-      matchable as Record<number, unknown>,
-      (key) => !keys.includes(key),
-    );
+      if (result.done) return false;
 
-    this.binding.set(heads.length, obj);
+      if (!matchElement.call(this, value, result.value, i)) {
+        return false;
+      }
+    }
+
+    const result = map.emplace(map.size, handler);
+
+    if (!result.done) return false;
 
     return true;
   }
@@ -169,16 +160,38 @@ function invokeCustomMatcher<T, U>(
 }
 
 // deno-lint-ignore ban-types
-function isIdentifier(object: object): object is Identifier {
+export function isIdentifier(object: object): object is Identifier {
   return identifier in object;
 }
 
 // deno-lint-ignore ban-types
-function isRest(object: object): object is Rest {
+export function isRest(object: object): object is Rest {
   return rest in object;
 }
 
 // deno-lint-ignore ban-types
-function isObject(input: unknown): input is object {
+export function isObject(input: unknown): input is object {
   return _isObject(input) || typeof input === "function";
+}
+
+function matchElement(
+  this: Env,
+  item: Item | Rest,
+  matchable: unknown,
+  i: number,
+): boolean {
+  if (item === undefined) return true;
+
+  if (isObject(item)) {
+    if (isIdentifier(item)) {
+      const key = item[identifier] ?? i;
+      this.binding.set(key, matchable);
+
+      return true;
+    } else if (isRest(item)) {
+      return true;
+    }
+  }
+
+  return matchPattern.call(this, item, matchable);
 }

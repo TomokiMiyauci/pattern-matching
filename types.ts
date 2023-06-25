@@ -2,6 +2,7 @@
 // This module is browser compatible.
 
 import { identifier, matcher, rest } from "./constants.ts";
+import { EmplaceableMap, EmplaceableWeakMap } from "./deps.ts";
 
 export type MatchResult<T> = MatchedResult<T> | UnmatchedResult;
 
@@ -18,7 +19,7 @@ export interface UnmatchedResult {
 }
 
 export interface Matcher<T, R> {
-  (matchable: T): MatchResult<R>;
+  (this: Env, matchable: T): MatchResult<R>;
 }
 
 export interface Matchable<T = unknown, R = unknown> {
@@ -49,10 +50,20 @@ export interface LazyPattern<T, R> {
   (matchable: unknown): Pattern<T, R>;
 }
 
-export interface Identifier<T extends string | false = string | false> {
+export interface Identifier<T extends string | undefined = string | undefined> {
   [identifier]: T;
 }
 
 export interface Rest<T extends string | undefined = string | undefined> {
   [rest]: T;
 }
+
+export interface Env {
+  binding: Map<string | number, unknown>;
+  cache: Cache;
+}
+
+export type Cache = EmplaceableWeakMap<
+  object,
+  EmplaceableMap<number, IteratorResult<unknown>>
+>;
