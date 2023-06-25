@@ -64,6 +64,7 @@ export interface Env {
 }
 
 export type Cache = EmplaceableWeakMap<
+  // deno-lint-ignore ban-types
   object,
   EmplaceableMap<number, IteratorResult<unknown>>
 >;
