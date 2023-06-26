@@ -42,25 +42,29 @@ export function matchConstructorInstance<T extends object>(
   return matchConstructorInstance(obj, target, intrinsicName);
 }
 
-export const $: RenameableIdentifier =
-  ((name: string) => ({ [identifier]: name })) as RenameableIdentifier;
+const SPREAD = "...";
 
-export interface RenameableIdentifier {
-  <const T extends string>(name: T): Identifier<T>;
-  [identifier]: undefined;
+export const _: BindingBuilder & Identifier<undefined> = ((name: string) => {
+  if (name.startsWith(SPREAD)) {
+    const restStr = name.slice(SPREAD.length);
+    const value = restStr || undefined;
+
+    return { [rest]: value };
+  }
+
+  return { [identifier]: name };
+}) as
+  & BindingBuilder
+  & Identifier<undefined>;
+
+export interface BindingBuilder {
+  <const T extends string>(
+    name: T,
+  ): T extends `...${infer U}` ? U extends "" ? Rest<undefined> : Rest<U>
+    : Identifier<T>;
 }
 
-$[identifier] = undefined;
-
-export interface RenameableRest extends Function {
-  <const T extends string>(name: T): Rest<T>;
-  [rest]: undefined;
-}
-
-export const $$: RenameableRest =
-  ((name: string) => ({ [rest]: name })) as RenameableRest;
-
-$$[rest] = undefined;
+_[identifier] = undefined;
 
 export type Option<T> = Some<T> | None;
 
