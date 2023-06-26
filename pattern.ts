@@ -53,7 +53,7 @@ export function matchArrayObject(
     // Detect empty item and if empty item, pass it.
     if (!Reflect.has(pattern, i)) continue;
 
-    const result = matchElement(value, iterResult.value, i, cache);
+    const result = matchElement(value, iterResult.value, cache);
 
     if (result.isNone()) return result;
 
@@ -169,14 +169,13 @@ export function isRest(object: object): object is Rest {
 export function matchElement(
   pattern: PatternItem | Rest,
   matchable: unknown,
-  key: PropertyKey,
   cache: Cache,
 ): Option<KeyValue> {
   if (isObject(pattern)) {
     if (isIdentifier(pattern)) {
-      const k = pattern[identifier] ?? key;
+      const key = pattern[identifier];
 
-      return Some.of({ [k]: matchable });
+      return Some.of({ [key]: matchable });
     } else if (isRest(pattern)) {
       return Some.of({});
     }

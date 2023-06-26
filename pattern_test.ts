@@ -91,7 +91,6 @@ describe("matchElement", () => {
       const result = matchElement(
         pattern,
         pattern,
-        "<key>",
         new WeakMap(),
       );
 
@@ -101,17 +100,16 @@ describe("matchElement", () => {
   });
 
   it("should return Some with record if the pattern is identifier", () => {
-    const table: [Identifier, unknown, PropertyKey, KeyValue][] = [
-      [{ [identifier]: undefined }, "", "abc", { abc: "" }],
-      [{ [identifier]: undefined }, {}, 1, { 1: {} }],
-      [{ [identifier]: "xxx" }, {}, 1, { xxx: {} }],
+    const table: [Identifier<string>, unknown, KeyValue][] = [
+      [{ [identifier]: "abc" }, "", { abc: "" }],
+      [{ [identifier]: "1" }, {}, { 1: {} }],
+      [{ [identifier]: "xxx" }, {}, { xxx: {} }],
     ];
 
-    table.forEach(([pattern, matchable, key, keyValue]) => {
+    table.forEach(([pattern, matchable, keyValue]) => {
       const result = matchElement(
         pattern,
         matchable,
-        key,
         new WeakMap(),
       );
 
@@ -168,7 +166,7 @@ describe("matchArrayObject", () => {
 
     const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
-      [0, { [identifier]: undefined }],
+      [0, { [identifier]: "1" }],
       iterator,
       cache,
     );
