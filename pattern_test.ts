@@ -1,7 +1,7 @@
-// deno-lint-ignore-file ban-types
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 
-import { EmplaceableWeakMap } from "./deps.ts";
+// deno-lint-ignore-file ban-types no-explicit-any
+
 import { identifier } from "./constants.ts";
 import { iter } from "./utils.ts";
 import {
@@ -92,7 +92,7 @@ describe("matchElement", () => {
         pattern,
         pattern,
         "<key>",
-        new EmplaceableWeakMap(),
+        new WeakMap(),
       );
 
       assert(result.isSome());
@@ -112,7 +112,7 @@ describe("matchElement", () => {
         pattern,
         matchable,
         key,
-        new EmplaceableWeakMap(),
+        new WeakMap(),
       );
 
       assert(result.isSome());
@@ -126,7 +126,7 @@ describe("matchArrayObject", () => {
     function* gen() {}
     const iterator = iter(gen());
 
-    const cache = new EmplaceableWeakMap<object, Map<PropertyKey, unknown>>();
+    const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject([], iterator, cache);
 
     assert(result.isSome());
@@ -145,7 +145,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new EmplaceableWeakMap<object, Map<PropertyKey, unknown>>();
+    const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject([0, 1], iterator, cache);
 
     assert(result.isSome());
@@ -166,7 +166,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new EmplaceableWeakMap<object, Map<PropertyKey, unknown>>();
+    const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
       [0, { [identifier]: undefined }],
       iterator,
@@ -186,7 +186,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new EmplaceableWeakMap<object, Map<PropertyKey, unknown>>();
+    const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
       [, 1, ,],
       iterator,
@@ -204,7 +204,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new EmplaceableWeakMap<object, Map<PropertyKey, unknown>>();
+    const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
       [/(?<a>a)/, /(?<a>b)/],
       iterator,
@@ -222,7 +222,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new EmplaceableWeakMap<object, Map<PropertyKey, unknown>>();
+    const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
       [undefined],
       iterator,
@@ -239,7 +239,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new EmplaceableWeakMap<object, Map<PropertyKey, unknown>>();
+    const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject([0, 1], iterator, cache);
 
     assert(result.isNone());
@@ -259,7 +259,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new EmplaceableWeakMap<object, Map<PropertyKey, unknown>>();
+    const cache = new WeakMap<object, Map<PropertyKey, any>>();
     const result = matchArrayObject([0], iterator, cache);
 
     assert(result.isNone());
@@ -274,7 +274,7 @@ describe("matchArrayObject", () => {
 describe("matchObject", () => {
   it("should return Some and cache matchable", () => {
     const matchable = {};
-    const cache = new EmplaceableWeakMap();
+    const cache = new WeakMap();
     const result = matchObject({}, matchable, cache);
 
     assert(result.isSome());
@@ -283,7 +283,7 @@ describe("matchObject", () => {
   });
 
   it("should", () => {
-    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
     const matchable = { a: 0 };
     const result = matchObject({ a: 0 }, matchable, cache);
 
@@ -295,7 +295,7 @@ describe("matchObject", () => {
   });
 
   it("should capture with property key name", () => {
-    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
     const matchable = { a: 0 };
     const result = matchObject(
       { a: { [identifier]: undefined } },
@@ -311,7 +311,7 @@ describe("matchObject", () => {
   });
 
   it("should capture with named identifier", () => {
-    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
     const matchable = { a: 0 };
     const result = matchObject(
       { a: { [identifier]: "b" } },
@@ -327,7 +327,7 @@ describe("matchObject", () => {
   });
 
   it("should capture nested property and cache it", () => {
-    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
     const nest2 = { c: "" };
     const nest = { b: nest2 };
     const matchable = { a: nest };
@@ -349,7 +349,7 @@ describe("matchObject", () => {
   });
 
   it("should override bindings", () => {
-    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
     const matchable = { a: 0, b: { a: 1 } };
     const result = matchObject(
       { a: { [identifier]: undefined }, b: { a: { [identifier]: undefined } } },
@@ -362,7 +362,7 @@ describe("matchObject", () => {
   });
 
   it("should return None if the property does not match", () => {
-    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
     const matchable = { a: 1 };
     const result = matchObject({ a: 0 }, matchable, cache);
 
@@ -374,7 +374,7 @@ describe("matchObject", () => {
   });
 
   it("should not cache if matchable does not have property", () => {
-    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
     const matchable = { a: 0 };
     const result = matchObject({ a: 0, b: 1 }, matchable, cache);
 

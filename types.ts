@@ -2,7 +2,6 @@
 // This module is browser compatible.
 
 import { identifier, matcher, rest } from "./constants.ts";
-import { EmplaceableMap, EmplaceableWeakMap } from "./deps.ts";
 
 export type MatchResult<T> = MatchedResult<T> | UnmatchedResult;
 
@@ -57,8 +56,8 @@ export interface Rest<T extends string | undefined = string | undefined> {
   [rest]: T;
 }
 
-// deno-lint-ignore ban-types
-export type Cache<K extends object = object, V = unknown> = EmplaceableWeakMap<
+// deno-lint-ignore ban-types no-explicit-any
+export type Cache<K extends object = object, V = any> = WeakMap<
   K,
-  EmplaceableMap<PropertyKey, V>
+  Map<unknown, V>
 >;

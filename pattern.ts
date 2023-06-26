@@ -4,7 +4,7 @@
 // deno-lint-ignore-file ban-types
 
 import { identifier, matcher, rest } from "./constants.ts";
-import { EmplaceableMap, insert, isIterable, isObject } from "./deps.ts";
+import { insert, isIterable, isObject } from "./deps.ts";
 import type {
   ArrayPattern,
   Cache,
@@ -42,15 +42,12 @@ export function matchArrayObject(
   matchable: Iterator<unknown>,
   cache: Cache<object, IteratorResult<unknown>>,
 ): Option<KeyValue> {
-  const map = cache.emplace(matchable, {
-    insert: () => new EmplaceableMap(),
-  });
-  const handler = { insert: () => matchable.next() };
+  const map = insert(cache, matchable, () => new Map());
+  const handler = () => matchable.next();
   const record = new RecordMap();
 
   for (const [i, value] of pattern.entries()) {
-    const iterResult = map.emplace(i, handler);
-
+    const iterResult = insert(map, i, handler);
     if (iterResult.done) return None;
 
     // Detect empty item and if empty item, pass it.
@@ -63,7 +60,7 @@ export function matchArrayObject(
     record.add(result.get);
   }
 
-  const result = map.emplace(map.size, handler);
+  const result = insert(map, map.size, handler);
 
   if (!result.done) return None;
 
@@ -76,7 +73,7 @@ export function matchObject(
   cache: Cache,
 ): Option<KeyValue> {
   const record = new RecordMap();
-  const map = insert(cache, matchable, () => new EmplaceableMap());
+  const map = insert(cache, matchable, () => new Map());
 
   for (const [key, value] of Object.entries(pattern)) {
     if (!Reflect.has(matchable, key)) return None;

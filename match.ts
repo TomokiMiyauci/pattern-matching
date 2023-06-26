@@ -1,7 +1,7 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { destLast, EmplaceableWeakMap } from "./deps.ts";
+import { destLast } from "./deps.ts";
 import type { Cache, MatchedResult, Matcher } from "./types.ts";
 
 export function match<const T>(
@@ -13,7 +13,7 @@ export function match<const T>(
   ]
 ) => R {
   return function (...matchers) {
-    const cache: Cache = new EmplaceableWeakMap();
+    const cache = new WeakMap();
 
     const [heads, last] = destLast(matchers);
 
