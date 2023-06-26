@@ -5,16 +5,18 @@ import type { Identifier } from "./types.ts";
 import { assertType, describe, IsExact, it } from "./_dev_deps.ts";
 
 describe("Binding", () => {
-  it("should infer never type", () => {
-    assertType<IsExact<Binding<unknown, string>, never>>(true);
-    assertType<IsExact<Binding<unknown, number>, never>>(true);
-    assertType<IsExact<Binding<unknown, null>, never>>(true);
-    assertType<IsExact<Binding<unknown, bigint>, never>>(true);
-    assertType<IsExact<Binding<unknown, boolean>, never>>(true);
-    assertType<IsExact<Binding<unknown, []>, never>>(true);
-    assertType<IsExact<Binding<unknown, [undefined, undefined]>, never>>(true);
+  it("should infer unknown type", () => {
+    assertType<IsExact<Binding<unknown, string>, unknown>>(true);
+    assertType<IsExact<Binding<unknown, number>, unknown>>(true);
+    assertType<IsExact<Binding<unknown, null>, unknown>>(true);
+    assertType<IsExact<Binding<unknown, bigint>, unknown>>(true);
+    assertType<IsExact<Binding<unknown, boolean>, unknown>>(true);
+    assertType<IsExact<Binding<unknown, []>, unknown>>(true);
+    assertType<IsExact<Binding<unknown, [undefined, undefined]>, unknown>>(
+      true,
+    );
     // deno-lint-ignore ban-types
-    assertType<IsExact<Binding<unknown, {}>, never>>(true);
+    assertType<IsExact<Binding<unknown, {}>, unknown>>(true);
   });
 
   it("should infer regex capture group", () => {

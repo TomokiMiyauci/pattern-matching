@@ -42,10 +42,7 @@ export function otherwise<T, R>(
   return (matchable) => createMatchResult(true, callback(matchable));
 }
 
-export type Binding<T, P extends Pattern> = unknown extends
-  UnionToIntersection<_Binding<T, P>> ? never
-  : UnionToIntersection<_Binding<T, P>>;
-
+export type Binding<T, P extends Pattern> = UnionToIntersection<_Binding<T, P>>;
 export type _Binding<T, P extends Pattern> = P extends string ? never
   : P extends RegExp ? Record<string, string>
   : P extends ObjectPattern ? {
