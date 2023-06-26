@@ -11,8 +11,9 @@ describe("Binding", () => {
     assertType<IsExact<Binding<unknown, null>, unknown>>(true);
     assertType<IsExact<Binding<unknown, bigint>, unknown>>(true);
     assertType<IsExact<Binding<unknown, boolean>, unknown>>(true);
-    assertType<IsExact<Binding<unknown, []>, unknown>>(true);
-    assertType<IsExact<Binding<unknown, [undefined, undefined]>, unknown>>(
+    assertType<IsExact<Binding<unknown, []>, { [k: string]: unknown }>>(true);
+    // deno-lint-ignore ban-types
+    assertType<IsExact<Binding<unknown, [undefined, undefined]>, {}>>(
       true,
     );
     // deno-lint-ignore ban-types
@@ -98,13 +99,17 @@ describe("Binding", () => {
   });
 
   it("should infer captured array index", () => {
-    assertType<IsExact<Binding<unknown, [Identifier]>, { 0: unknown }>>(true);
-    assertType<IsExact<Binding<unknown, [Identifier, string]>, { 0: unknown }>>(
+    assertType<IsExact<Binding<unknown, [Identifier<"0">]>, { "0": unknown }>>(
+      true,
+    );
+    assertType<
+      IsExact<Binding<unknown, [Identifier<"0">, string]>, { 0: unknown }>
+    >(
       true,
     );
     assertType<
       IsExact<
-        Binding<unknown, [Identifier, undefined, Identifier]>,
+        Binding<unknown, [Identifier<"0">, undefined, Identifier<"2">]>,
         { 0: unknown; 2: unknown }
       >
     >(
@@ -112,7 +117,7 @@ describe("Binding", () => {
     );
     assertType<
       IsExact<
-        Binding<unknown, [Identifier, [Identifier]]>,
+        Binding<unknown, [Identifier<"0">, [Identifier<"0">]]>,
         { 0: unknown }
       >
     >(
@@ -121,7 +126,7 @@ describe("Binding", () => {
 
     assertType<
       IsExact<
-        Binding<unknown, [Identifier, [[[[[Identifier]]]]]]>,
+        Binding<unknown, [Identifier<"0">, [[[[[Identifier<"0">]]]]]]>,
         { 0: unknown }
       >
     >(
@@ -137,22 +142,45 @@ describe("Binding", () => {
       IsExact<
         Binding<
           unknown,
-          [{ a: Identifier }, Identifier, string, { a: Identifier }]
+          [{ a: Identifier }, Identifier<"1">, string, { a: Identifier }]
         >,
         { a: unknown; 1: unknown }
       >
     >(true);
     assertType<
-      IsExact<Binding<unknown, [Identifier, { 0: Identifier }]>, { 0: unknown }>
+      IsExact<
+        Binding<unknown, [Identifier<"0">, { 0: Identifier }]>,
+        { 0: unknown }
+      >
     >(true);
     assertType<
       IsExact<
         Binding<
           unknown,
-          [Identifier, { a: { b: { c: [string, { d: [Identifier] }] } } }]
+          [
+            Identifier<"0">,
+            { a: { b: { c: [string, { d: [Identifier<"0">] }] } } },
+          ]
         >,
         { 0: unknown }
       >
+    >(true);
+  });
+
+  it("should infer matchable of array item", () => {
+    assertType<IsExact<Binding<[0], [Identifier<"0">]>, { 0: 0 }>>(true);
+    assertType<IsExact<Binding<["test"], [Identifier<"0">]>, { 0: "test" }>>(
+      true,
+    );
+    assertType<
+      IsExact<
+        Binding<[undefined, undefined], [undefined, Identifier<"1">]>,
+        { 1: undefined }
+      >
+    >(true);
+
+    assertType<
+      IsExact<Binding<[[["test"]]], [[[Identifier<"0">]]]>, { 0: "test" }>
     >(true);
   });
 });

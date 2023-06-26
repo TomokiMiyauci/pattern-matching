@@ -50,11 +50,17 @@ export type _Binding<T, P extends Pattern> = P extends string ? never
         : P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
         : never;
     }[keyof P]
-  : P extends ArrayPattern ? {
-      [k in keyof P]: P[k] extends Identifier ? { [key in k]: unknown }
-        : P[k] extends infer X extends Pattern ? _Binding<T, X>
-        : never;
-    }[number]
+  : P extends ArrayPattern ?
+      | {
+        [
+          k in keyof P as P[k] extends Identifier<infer U extends string> ? U
+            : never
+        ]: Get<T, k>;
+      }
+      | {
+        [k in keyof P]: P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
+          : never;
+      }[number]
   : never;
 
 type Get<T, K extends PropertyKey> = T extends Record<K, unknown> ? T[K]
