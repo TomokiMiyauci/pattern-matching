@@ -61,6 +61,42 @@ describe("Binding", () => {
     >(true);
   });
 
+  it("should infer matchable property", () => {
+    assertType<
+      IsExact<Binding<{ a: string }, { a: Identifier }>, { a: string }>
+    >(true);
+
+    assertType<
+      IsExact<Binding<{ a: "test" }, { a: Identifier }>, { a: "test" }>
+    >(true);
+
+    assertType<
+      IsExact<
+        Binding<{ a: { b: string } }, { a: { b: Identifier } }>,
+        { b: string }
+      >
+    >(true);
+
+    assertType<
+      IsExact<
+        Binding<{ a: string }, { a: { b: Identifier } }>,
+        { b: unknown }
+      >
+    >(true);
+  });
+
+  it("should intersect inferred type if the binding name is duplicated", () => {
+    assertType<
+      IsExact<
+        Binding<
+          { a: string; b: { a: number } },
+          { a: Identifier; b: { a: Identifier } }
+        >,
+        { a: never }
+      >
+    >(true);
+  });
+
   it("should infer captured array index", () => {
     assertType<IsExact<Binding<unknown, [Identifier]>, { 0: unknown }>>(true);
     assertType<IsExact<Binding<unknown, [Identifier, string]>, { 0: unknown }>>(

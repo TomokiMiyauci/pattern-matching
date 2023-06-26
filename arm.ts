@@ -46,16 +46,19 @@ export type Binding<T, P extends Pattern> = UnionToIntersection<_Binding<T, P>>;
 export type _Binding<T, P extends Pattern> = P extends string ? never
   : P extends RegExp ? Record<string, string>
   : P extends ObjectPattern ? {
-      [k in keyof P]: P[k] extends Identifier ? { [ka in k]: unknown }
-        : P[k] extends infer X extends Pattern ? _Binding<T, X>
+      [k in keyof P]: P[k] extends Identifier ? { [key in k]: Get<T, k> }
+        : P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
         : never;
     }[keyof P]
   : P extends ArrayPattern ? {
-      [k in keyof P]: P[k] extends Identifier ? { [ka in k]: unknown }
+      [k in keyof P]: P[k] extends Identifier ? { [key in k]: unknown }
         : P[k] extends infer X extends Pattern ? _Binding<T, X>
         : never;
     }[number]
   : never;
+
+type Get<T, K extends PropertyKey> = T extends Record<K, unknown> ? T[K]
+  : unknown;
 
 export function when<T, P extends Pattern<unknown, unknown>, U>(
   pattern: P,
