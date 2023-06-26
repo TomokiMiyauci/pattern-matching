@@ -41,9 +41,7 @@ export type Pattern<T = unknown, R = unknown> =
 
 export type ArrayPattern = PatternItem[] | [...PatternItem[], Rest];
 
-export type ObjectPattern =
-  | { [k: PropertyKey]: Pattern | Identifier }
-  | { "...": Rest<string> };
+export type ObjectPattern = { [k: PropertyKey]: Pattern | Identifier };
 
 export type PatternItem = Pattern | Identifier;
 
@@ -59,8 +57,8 @@ export interface Rest<T extends string | undefined = string | undefined> {
   [rest]: T;
 }
 
-export type Cache = EmplaceableWeakMap<
-  // deno-lint-ignore ban-types
-  object,
-  EmplaceableMap<number, IteratorResult<unknown>>
+// deno-lint-ignore ban-types
+export type Cache<K extends object = object, V = unknown> = EmplaceableWeakMap<
+  K,
+  EmplaceableMap<PropertyKey, V>
 >;

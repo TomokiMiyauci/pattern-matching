@@ -1,8 +1,10 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
+// deno-lint-ignore-file ban-types
+
 import { identifier, matcher, rest } from "./constants.ts";
-import { EmplaceableMap, filterKeys, isIterable, isObject } from "./deps.ts";
+import { EmplaceableMap, insert, isIterable, isObject } from "./deps.ts";
 import type {
   ArrayPattern,
   Cache,
@@ -38,7 +40,7 @@ export function matchNearLiteral(
 export function matchArrayObject(
   pattern: ArrayPattern,
   matchable: Iterator<unknown>,
-  cache: Cache,
+  cache: Cache<object, IteratorResult<unknown>>,
 ): Option<KeyValue> {
   const map = cache.emplace(matchable, {
     insert: () => new EmplaceableMap(),
@@ -68,49 +70,37 @@ export function matchArrayObject(
   return Some.of(record.get);
 }
 
-export class ObjectMatchPattern {
-  static match(
-    pattern: ObjectPattern,
-    matchable: unknown,
-    cache: Cache,
-  ): Option<KeyValue> {
-    if (!isObject(matchable)) return None;
+export function matchObject(
+  pattern: ObjectPattern,
+  matchable: object,
+  cache: Cache,
+): Option<KeyValue> {
+  const record = new RecordMap();
+  const map = insert(cache, matchable, () => new EmplaceableMap());
 
-    const { "...": $$, ...restPattern } = pattern;
+  for (const [key, value] of Object.entries(pattern)) {
+    if (!Reflect.has(matchable, key)) return None;
 
-    const hasRest = isObject($$) && isRest($$);
+    const actValue = insert(
+      map,
+      key,
+      (key) => Reflect.get(matchable, key) as unknown,
+    );
 
-    pattern = hasRest ? restPattern : pattern;
-
-    let x: KeyValue = {};
-
-    for (const [key, value] of Object.entries(pattern)) {
-      if (!Reflect.has(matchable, key)) return None;
-
-      const actValue = Reflect.get(matchable, key);
-
-      if (isObject(value) && isIdentifier(value)) {
-        const k = value[identifier] ?? key;
-
-        x[k] = actValue;
-        continue;
-      }
-
-      const result = matchPattern(value, actValue, cache);
-
-      if (result.isNone()) return None;
-
-      x = { ...x, ...result.get };
+    if (isObject(value) && isIdentifier(value)) {
+      const k = value[identifier] ?? key;
+      record.set(k, actValue);
+      continue;
     }
 
-    if (!hasRest) return Some.of(x);
+    const result = matchPattern(value, actValue, cache);
 
-    const name = $$[rest];
-    const keys = Object.keys(pattern);
-    const obj = filterKeys({ ...matchable }, (key) => !keys.includes(key));
+    if (result.isNone()) return None;
 
-    return Some.of({ ...x, [name]: obj });
+    record.add(result.get);
   }
+
+  return Some.of(record.get);
 }
 
 export function matchPattern(
@@ -142,7 +132,9 @@ export function matchPattern(
         return matchArrayObject(pattern, iter(matchable), cache);
       }
 
-      return ObjectMatchPattern.match(pattern, matchable, cache);
+      if (!isObject(matchable)) return None;
+
+      return matchObject(pattern, matchable, cache);
     }
 
     default: {
@@ -151,7 +143,6 @@ export function matchPattern(
   }
 }
 
-// deno-lint-ignore ban-types
 export function isMatcher(value: {}): value is Matchable {
   return matcher in value &&
     typeof value[matcher] === "function";
@@ -170,12 +161,10 @@ function invokeCustomMatcher<T, U>(
   return result.value;
 }
 
-// deno-lint-ignore ban-types
 export function isIdentifier(object: object): object is Identifier {
   return identifier in object;
 }
 
-// deno-lint-ignore ban-types
 export function isRest(object: object): object is Rest {
   return rest in object;
 }
@@ -209,6 +198,12 @@ class RecordMap<K extends string, V> {
     for (const [key, value] of Object.entries(record)) {
       this.#value[key as K] = value as V;
     }
+
+    return this;
+  }
+
+  set(key: K, value: V): this {
+    this.#value[key] = value;
 
     return this;
   }

@@ -1,3 +1,4 @@
+// deno-lint-ignore-file ban-types
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 
 import { EmplaceableWeakMap } from "./deps.ts";
@@ -8,6 +9,7 @@ import {
   matchArrayObject,
   matchElement,
   matchNearLiteral,
+  matchObject,
 } from "./pattern.ts";
 import { assert, assertEquals, describe, it } from "./_dev_deps.ts";
 import { Identifier } from "./types.ts";
@@ -266,5 +268,120 @@ describe("matchArrayObject", () => {
     assertEquals(cache.get(iterator)?.size, 2);
     assertEquals(cache.get(iterator)?.get(0), { done: false, value: 0 });
     assertEquals(cache.get(iterator)?.get(1), { done: false, value: 1 });
+  });
+});
+
+describe("matchObject", () => {
+  it("should return Some and cache matchable", () => {
+    const matchable = {};
+    const cache = new EmplaceableWeakMap();
+    const result = matchObject({}, matchable, cache);
+
+    assert(result.isSome());
+    assertEquals(result.get, {});
+    assert(cache.has(matchable));
+  });
+
+  it("should", () => {
+    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 0 };
+    const result = matchObject({ a: 0 }, matchable, cache);
+
+    assert(result.isSome());
+    assertEquals(result.get, {});
+
+    assert(cache.has(matchable));
+    assertEquals(cache.get(matchable)?.get("a"), 0);
+  });
+
+  it("should capture with property key name", () => {
+    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 0 };
+    const result = matchObject(
+      { a: { [identifier]: undefined } },
+      matchable,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, { a: 0 });
+
+    assert(cache.has(matchable));
+    assertEquals(cache.get(matchable)?.get("a"), 0);
+  });
+
+  it("should capture with named identifier", () => {
+    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 0 };
+    const result = matchObject(
+      { a: { [identifier]: "b" } },
+      matchable,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, { b: 0 });
+
+    assert(cache.has(matchable));
+    assertEquals(cache.get(matchable)?.get("a"), 0);
+  });
+
+  it("should capture nested property and cache it", () => {
+    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const nest2 = { c: "" };
+    const nest = { b: nest2 };
+    const matchable = { a: nest };
+    const result = matchObject(
+      { a: { b: { c: { [identifier]: undefined } } } },
+      matchable,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, { c: "" });
+
+    assert(cache.has(matchable));
+    assertEquals(cache.get(matchable)?.get("a"), nest);
+    assert(cache.has(nest));
+    assertEquals(cache.get(nest)?.get("b"), nest2);
+    assert(cache.has(nest2));
+    assertEquals(cache.get(nest2)?.get("c"), "");
+  });
+
+  it("should override bindings", () => {
+    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 0, b: { a: 1 } };
+    const result = matchObject(
+      { a: { [identifier]: undefined }, b: { a: { [identifier]: undefined } } },
+      matchable,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, { a: 1 });
+  });
+
+  it("should return None if the property does not match", () => {
+    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 1 };
+    const result = matchObject({ a: 0 }, matchable, cache);
+
+    assert(result.isNone());
+
+    assert(cache.has(matchable));
+    assertEquals(cache.get(matchable)?.get("a"), 1);
+    assertEquals(cache.get(matchable)?.size, 1);
+  });
+
+  it("should not cache if matchable does not have property", () => {
+    const cache = new EmplaceableWeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 0 };
+    const result = matchObject({ a: 0, b: 1 }, matchable, cache);
+
+    assert(result.isNone());
+
+    assert(cache.has(matchable));
+    assertEquals(cache.get(matchable)?.get("a"), 0);
+    assertEquals(cache.get(matchable)?.size, 1);
   });
 });
