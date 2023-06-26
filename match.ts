@@ -2,27 +2,27 @@
 // This module is browser compatible.
 
 import { destLast, EmplaceableWeakMap } from "./deps.ts";
-import type { Env, MatchedResult, Matcher } from "./types.ts";
+import type { Cache, MatchedResult, Matcher } from "./types.ts";
 
 export function match<const T>(
   matchable: T,
 ): <R>(
-  ...matchers: [...Matcher<T, R>[], (matchable: T) => MatchedResult<R>]
+  ...matchers: [
+    ...Matcher<T, R>[],
+    (this: Cache, matchable: T) => MatchedResult<R>,
+  ]
 ) => R {
   return function (...matchers) {
-    const env: Env = {
-      binding: new Map(),
-      cache: new EmplaceableWeakMap(),
-    };
+    const cache: Cache = new EmplaceableWeakMap();
 
     const [heads, last] = destLast(matchers);
 
     for (const matcher of heads) {
-      const result = matcher.call(env, matchable);
+      const result = matcher.call(cache, matchable);
 
       if (result.matched) return result.value;
     }
 
-    return last(matchable).value;
+    return last.call(cache, matchable).value;
   };
 }

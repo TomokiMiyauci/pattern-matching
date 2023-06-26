@@ -61,3 +61,52 @@ export const $$: RenameableRest =
   ((name: string) => ({ [rest]: name })) as RenameableRest;
 
 $$[rest] = undefined;
+
+export type Option<T> = Some<T> | None;
+
+export class Some<T> {
+  #value: T;
+  private constructor(value: T) {
+    this.#value = value;
+  }
+
+  static of<T>(value: T): Some<T> {
+    return new Some(value);
+  }
+
+  get get(): T {
+    return this.#value;
+  }
+
+  isSome(): this is Some<T> {
+    return true;
+  }
+
+  isNone(): this is None {
+    return false;
+  }
+}
+
+export interface None {
+  isSome: () => false;
+  isNone: () => true;
+}
+
+export const None: None = {
+  isSome(): false {
+    return false;
+  },
+  isNone(): true {
+    return true;
+  },
+};
+
+export function from<T>(input: unknown, value: T): Option<T> {
+  if (input) return Some.of(value);
+
+  return None;
+}
+
+export function iter<T>(iterable: Iterable<T>): Iterator<T> {
+  return iterable[Symbol.iterator]();
+}

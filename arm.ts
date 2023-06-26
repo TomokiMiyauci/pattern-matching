@@ -62,17 +62,16 @@ export type _Binding<T, P extends Pattern> = P extends string ? never
 
 export function when<T, P extends Pattern<unknown, unknown>, U>(
   pattern: P,
-  callback: (this: T, matched: Binding<T, P>) => U,
+  callback: (this: T, binding: Binding<T, P>) => U,
 ): Matcher<T, U> {
   return function (matchable) {
-    if (matchPattern.call(this, pattern, matchable)) {
-      return createMatchResult(
-        true,
-        // deno-lint-ignore no-explicit-any
-        callback.call(matchable, Object.fromEntries(this.binding) as any),
-      );
-    }
+    const result = matchPattern(pattern, matchable, this);
 
-    return createMatchResult(false);
+    if (result.isNone()) return createMatchResult(false);
+
+    return createMatchResult(
+      true,
+      callback.call(matchable, result.get as Binding<T, P>),
+    );
   };
 }

@@ -2,15 +2,10 @@
 // This module is browser compatible.
 
 import { identifier, matcher, rest } from "./constants.ts";
-import {
-  EmplaceableMap,
-  filterKeys,
-  isIterable,
-  isObject as _isObject,
-} from "./deps.ts";
+import { EmplaceableMap, filterKeys, isIterable, isObject } from "./deps.ts";
 import type {
   ArrayPattern,
-  Env,
+  Cache,
   Identifier,
   Matchable,
   ObjectPattern,
@@ -19,67 +14,67 @@ import type {
   Rest,
 } from "./types.ts";
 import { sameValue } from "./ecma.ts";
+import { from, iter, None, Option, Some } from "./utils.ts";
+
+export type KeyValue = Record<string, unknown>;
 
 export function matchNearLiteral(
-  this: Env,
   pattern: string | bigint | number | boolean | null | undefined | RegExp,
   matchable: unknown,
-): boolean {
+): Option<Record<string, string>> {
   if (pattern instanceof RegExp) {
     const result = pattern.exec(String(matchable));
 
-    if (!result) return false;
-    if (!result.groups) return true;
+    if (!result) return None;
 
-    for (const [name, value] of Object.entries(result.groups)) {
-      this.binding.set(name, value);
-    }
+    const groups = result.groups ? { ...result.groups } : {};
 
-    return true;
-  } else {
-    return sameValue(matchable, pattern);
+    return Some.of(groups);
   }
+
+  return from(sameValue(matchable, pattern), {});
 }
 
-export class ArrayObjectMatchPattern {
-  static match(
-    this: Env,
-    pattern: ArrayPattern,
-    matchable: unknown,
-  ): boolean {
-    if (!isIterable(matchable)) return false;
+export function matchArrayObject(
+  pattern: ArrayPattern,
+  matchable: Iterator<unknown>,
+  cache: Cache,
+): Option<KeyValue> {
+  const map = cache.emplace(matchable, {
+    insert: () => new EmplaceableMap(),
+  });
+  const handler = { insert: () => matchable.next() };
+  const record = new RecordMap();
 
-    const iterator = matchable[Symbol.iterator]();
-    const map = this.cache.emplace(iterator, {
-      insert: () => new EmplaceableMap(),
-    });
-    const handler = { insert: () => iterator.next() };
+  for (const [i, value] of pattern.entries()) {
+    const iterResult = map.emplace(i, handler);
 
-    for (const [i, value] of pattern.entries()) {
-      const result = map.emplace(i, handler);
+    if (iterResult.done) return None;
 
-      if (result.done) return false;
+    // Detect empty item and if empty item, pass it.
+    if (!Reflect.has(pattern, i)) continue;
 
-      if (!matchElement.call(this, value, result.value, i)) {
-        return false;
-      }
-    }
+    const result = matchElement(value, iterResult.value, i, cache);
 
-    const result = map.emplace(map.size, handler);
+    if (result.isNone()) return result;
 
-    if (!result.done) return false;
-
-    return true;
+    record.add(result.get);
   }
+
+  const result = map.emplace(map.size, handler);
+
+  if (!result.done) return None;
+
+  return Some.of(record.get);
 }
 
 export class ObjectMatchPattern {
   static match(
-    this: Env,
     pattern: ObjectPattern,
     matchable: unknown,
-  ): boolean {
-    if (!isObject(matchable)) return false;
+    cache: Cache,
+  ): Option<KeyValue> {
+    if (!isObject(matchable)) return None;
 
     const { "...": $$, ...restPattern } = pattern;
 
@@ -87,38 +82,44 @@ export class ObjectMatchPattern {
 
     pattern = hasRest ? restPattern : pattern;
 
-    const result = Object.entries(pattern).every(([key, value]) => {
-      if (!Reflect.has(matchable, key)) return false;
+    let x: KeyValue = {};
+
+    for (const [key, value] of Object.entries(pattern)) {
+      if (!Reflect.has(matchable, key)) return None;
 
       const actValue = Reflect.get(matchable, key);
 
       if (isObject(value) && isIdentifier(value)) {
-        key = value[identifier] ?? key;
-        this.binding.set(key, actValue);
-        return true;
+        const k = value[identifier] ?? key;
+
+        x[k] = actValue;
+        continue;
       }
 
-      return matchPattern.call(this, value, actValue);
-    });
+      const result = matchPattern(value, actValue, cache);
 
-    if (!result || !hasRest) return result;
+      if (result.isNone()) return None;
+
+      x = { ...x, ...result.get };
+    }
+
+    if (!hasRest) return Some.of(x);
 
     const name = $$[rest];
     const keys = Object.keys(pattern);
     const obj = filterKeys({ ...matchable }, (key) => !keys.includes(key));
-    this.binding.set(name, obj);
 
-    return true;
+    return Some.of({ ...x, [name]: obj });
   }
 }
 
 export function matchPattern(
-  this: Env,
   pattern: Pattern,
   matchable: unknown,
-): boolean {
+  cache: Cache,
+): Option<KeyValue> {
   if (pattern === null) {
-    return matchNearLiteral.call(this, pattern, matchable);
+    return matchNearLiteral(pattern, matchable);
   }
 
   switch (typeof pattern) {
@@ -126,24 +127,26 @@ export function matchPattern(
       if (isMatcher(pattern)) {
         const result = invokeCustomMatcher(pattern, matchable);
 
-        if (result === notMatched) return false;
+        if (result === notMatched) return None;
 
-        return true;
+        return Some.of({});
       }
 
       if (pattern instanceof RegExp) {
-        return matchNearLiteral.call(this, pattern, matchable);
+        return matchNearLiteral(pattern, matchable);
       }
 
       if (Array.isArray(pattern)) {
-        return ArrayObjectMatchPattern.match.call(this, pattern, matchable);
+        if (!isIterable(matchable)) return None;
+
+        return matchArrayObject(pattern, iter(matchable), cache);
       }
 
-      return ObjectMatchPattern.match.call(this, pattern, matchable);
+      return ObjectMatchPattern.match(pattern, matchable, cache);
     }
 
     default: {
-      return matchNearLiteral.call(this, pattern, matchable);
+      return matchNearLiteral(pattern, matchable);
     }
   }
 }
@@ -177,27 +180,40 @@ export function isRest(object: object): object is Rest {
   return rest in object;
 }
 
-// deno-lint-ignore ban-types
-export function isObject(input: unknown): input is object {
-  return _isObject(input) || typeof input === "function";
-}
-
-function matchElement(
-  this: Env,
-  item: PatternItem | Rest,
+export function matchElement(
+  pattern: PatternItem | Rest,
   matchable: unknown,
-  i: number,
-): boolean {
-  if (isObject(item)) {
-    if (isIdentifier(item)) {
-      const key = item[identifier] ?? i;
-      this.binding.set(key, matchable);
+  key: PropertyKey,
+  cache: Cache,
+): Option<KeyValue> {
+  if (isObject(pattern)) {
+    if (isIdentifier(pattern)) {
+      const k = pattern[identifier] ?? key;
 
-      return true;
-    } else if (isRest(item)) {
-      return true;
+      return Some.of({ [k]: matchable });
+    } else if (isRest(pattern)) {
+      return Some.of({});
     }
   }
 
-  return matchPattern.call(this, item, matchable);
+  return matchPattern(pattern, matchable, cache);
+}
+
+class RecordMap<K extends string, V> {
+  #value: Record<K, V>;
+  constructor(record?: Record<K, V>) {
+    this.#value = record ?? {} as Record<K, V>;
+  }
+
+  add(record: Record<K, V>): this {
+    for (const [key, value] of Object.entries(record)) {
+      this.#value[key as K] = value as V;
+    }
+
+    return this;
+  }
+
+  get get(): Record<K, V> {
+    return this.#value;
+  }
 }

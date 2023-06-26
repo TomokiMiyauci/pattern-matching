@@ -19,7 +19,7 @@ export interface UnmatchedResult {
 }
 
 export interface Matcher<T, R> {
-  (this: Env, matchable: T): MatchResult<R>;
+  (this: Cache, matchable: T): MatchResult<R>;
 }
 
 export interface Matchable<T = unknown, R = unknown> {
@@ -57,11 +57,6 @@ export interface Identifier<T extends string | undefined = string | undefined> {
 
 export interface Rest<T extends string | undefined = string | undefined> {
   [rest]: T;
-}
-
-export interface Env {
-  binding: Map<string | number, unknown>;
-  cache: Cache;
 }
 
 export type Cache = EmplaceableWeakMap<
