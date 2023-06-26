@@ -36,13 +36,12 @@ export type Pattern<T = unknown, R = unknown> =
   | ObjectPattern
   | ArrayPattern
   | Matchable<T, R>;
-// | LazyPattern<T, R>;
 
 export type ArrayPattern = PatternItem[] | [...PatternItem[], Rest];
 
-export type ObjectPattern = { [k: PropertyKey]: Pattern | Identifier };
+export type ObjectPattern = { [k: string]: Pattern | Identifier };
 
-export type PatternItem = Pattern | Identifier;
+export type PatternItem = Pattern | Identifier<string>;
 
 export interface LazyPattern<T, R> {
   (matchable: unknown): Pattern<T, R>;
