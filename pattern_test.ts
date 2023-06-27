@@ -2,7 +2,7 @@
 
 // deno-lint-ignore-file ban-types no-explicit-any
 
-import { identifier } from "./constants.ts";
+import { identifier, rest } from "./constants.ts";
 import { iter } from "./utils.ts";
 import {
   KeyValue,
@@ -12,7 +12,7 @@ import {
   matchObject,
 } from "./pattern.ts";
 import { assert, assertEquals, describe, it } from "./_dev_deps.ts";
-import { Identifier } from "./types.ts";
+import { IdentifierPattern } from "./types.ts";
 
 type Primitive = string | bigint | number | boolean | null | undefined;
 
@@ -100,7 +100,7 @@ describe("matchElement", () => {
   });
 
   it("should return Some with record if the pattern is identifier", () => {
-    const table: [Identifier<string>, unknown, KeyValue][] = [
+    const table: [IdentifierPattern<string>, unknown, KeyValue][] = [
       [{ [identifier]: "abc" }, "", { abc: "" }],
       [{ [identifier]: "1" }, {}, { 1: {} }],
       [{ [identifier]: "xxx" }, {}, { xxx: {} }],
@@ -296,7 +296,7 @@ describe("matchObject", () => {
     const cache = new WeakMap<object, Map<unknown, unknown>>();
     const matchable = { a: 0 };
     const result = matchObject(
-      { a: { [identifier]: undefined } },
+      { a: { [identifier]: "a" } },
       matchable,
       cache,
     );
@@ -330,7 +330,7 @@ describe("matchObject", () => {
     const nest = { b: nest2 };
     const matchable = { a: nest };
     const result = matchObject(
-      { a: { b: { c: { [identifier]: undefined } } } },
+      { a: { b: { c: { [identifier]: "c" } } } },
       matchable,
       cache,
     );
@@ -350,7 +350,7 @@ describe("matchObject", () => {
     const cache = new WeakMap<object, Map<unknown, unknown>>();
     const matchable = { a: 0, b: { a: 1 } };
     const result = matchObject(
-      { a: { [identifier]: undefined }, b: { a: { [identifier]: undefined } } },
+      { a: { [identifier]: "a" }, b: { a: { [identifier]: "a" } } },
       matchable,
       cache,
     );
@@ -371,15 +371,62 @@ describe("matchObject", () => {
     assertEquals(cache.get(matchable)?.size, 1);
   });
 
-  it("should not cache if matchable does not have property", () => {
+  it("should expose all properties as binding, it should not cache", () => {
     const cache = new WeakMap<object, Map<unknown, unknown>>();
-    const matchable = { a: 0 };
-    const result = matchObject({ a: 0, b: 1 }, matchable, cache);
+    const matchable = { a: 1, b: 2 };
+    const result = matchObject({ [rest]: "" }, matchable, cache);
 
-    assert(result.isNone());
+    assert(result.isSome());
+    assertEquals(result.get, { "": { a: 1, b: 2 } });
 
     assert(cache.has(matchable));
-    assertEquals(cache.get(matchable)?.get("a"), 0);
-    assertEquals(cache.get(matchable)?.size, 1);
+    assertEquals(cache.get(matchable)?.size, 0);
   });
+
+  it("should expose rest of binding", () => {
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 1, b: 2, c: 3 };
+    const result = matchObject({ a: 1, [rest]: "rest" }, matchable, cache);
+
+    assert(result.isSome());
+    assertEquals(result.get, { "rest": { b: 2, c: 3 } });
+  });
+
+  it("should expose rest and identifier binding and", () => {
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 1, b: 2, c: 3 };
+    const result = matchObject(
+      { a: { [identifier]: "a" }, [rest]: "rest" },
+      matchable,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, { a: 1, "rest": { b: 2, c: 3 } });
+  });
+
+  it("should expose empty rest binding", () => {
+    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const matchable = { a: 1, b: 2, c: 3 };
+    const result = matchObject(
+      { a: 1, b: 2, c: 3, [rest]: "rest" },
+      matchable,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, { "rest": {} });
+  });
+
+  // it("should not cache if matchable does not have property", () => {
+  //   const cache = new WeakMap<object, Map<unknown, unknown>>();
+  //   const matchable = { a: 0 };
+  //   const result = matchObject({ a: 0, b: 1 }, matchable, cache);
+
+  //   assert(result.isNone());
+
+  //   assert(cache.has(matchable));
+  //   assertEquals(cache.get(matchable)?.get("a"), 0);
+  //   assertEquals(cache.get(matchable)?.size, 1);
+  // });
 });

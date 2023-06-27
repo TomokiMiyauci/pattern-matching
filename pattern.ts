@@ -8,20 +8,21 @@ import { insert, isIterable, isObject } from "./deps.ts";
 import type {
   ArrayPattern,
   Cache,
-  Identifier,
+  IdentifierPattern,
   Matchable,
+  NearLiteralPattern,
   ObjectPattern,
   Pattern,
   PatternItem,
   Rest,
 } from "./types.ts";
 import { sameValue } from "./ecma.ts";
-import { from, iter, None, Option, Some } from "./utils.ts";
+import { from, iter, None, omit, Option, Some } from "./utils.ts";
 
 export type KeyValue = Record<string, unknown>;
 
 export function matchNearLiteral(
-  pattern: string | bigint | number | boolean | null | undefined | RegExp,
+  pattern: NearLiteralPattern,
   matchable: unknown,
 ): Option<Record<string, string>> {
   if (pattern instanceof RegExp) {
@@ -35,6 +36,16 @@ export function matchNearLiteral(
   }
 
   return from(sameValue(matchable, pattern), {});
+}
+
+export function matchIdentifier<T extends string, U>(
+  pattern: IdentifierPattern<T>,
+  matchable: U,
+): Some<{ [k in T]: U }> {
+  const name = pattern[identifier];
+  const bindings = { [name]: matchable } as { [k in T]: U };
+
+  return Some.of(bindings);
 }
 
 export function matchArrayObject(
@@ -67,28 +78,20 @@ export function matchArrayObject(
   return Some.of(record.get);
 }
 
-export function matchObject(
-  pattern: ObjectPattern,
-  matchable: object,
+export function matchObject<T extends string>(
+  pattern: ObjectPattern<T>,
+  matchable: Record<T, unknown>,
   cache: Cache,
 ): Option<KeyValue> {
-  const record = new RecordMap();
   const map = insert(cache, matchable, () => new Map());
+  const record = new RecordMap();
 
   for (const [key, value] of Object.entries(pattern)) {
-    if (!Reflect.has(matchable, key)) return None;
-
     const actValue = insert(
       map,
       key,
       (key) => Reflect.get(matchable, key) as unknown,
     );
-
-    if (isObject(value) && isIdentifier(value)) {
-      const k = value[identifier] ?? key;
-      record.set(k, actValue);
-      continue;
-    }
 
     const result = matchPattern(value, actValue, cache);
 
@@ -97,7 +100,24 @@ export function matchObject(
     record.add(result.get);
   }
 
+  const hasRest = hasRestPattern(pattern);
+
+  if (!hasRest) return Some.of(record.get);
+
+  const restRecord = omit(matchable, Object.keys(pattern));
+  const name = pattern[rest];
+
+  record.set(name, restRecord);
+
   return Some.of(record.get);
+}
+
+export function hasRestPattern(
+  pattern: ObjectPattern,
+): pattern is {
+  [k: string]: Pattern | IdentifierPattern;
+} & { [rest]: string } {
+  return rest in pattern;
 }
 
 export function matchPattern(
@@ -105,39 +125,31 @@ export function matchPattern(
   matchable: unknown,
   cache: Cache,
 ): Option<KeyValue> {
-  if (pattern === null) {
-    return matchNearLiteral(pattern, matchable);
+  if (!isObject(pattern)) return matchNearLiteral(pattern, matchable);
+
+  if (isMatcher(pattern)) {
+    const result = invokeCustomMatcher(pattern, matchable);
+
+    if (result === notMatched) return None;
+
+    return Some.of({});
   }
 
-  switch (typeof pattern) {
-    case "object": {
-      if (isMatcher(pattern)) {
-        const result = invokeCustomMatcher(pattern, matchable);
+  if (isIdentifierPattern(pattern)) return matchIdentifier(pattern, matchable);
 
-        if (result === notMatched) return None;
+  if (pattern instanceof RegExp) return matchNearLiteral(pattern, matchable);
 
-        return Some.of({});
-      }
+  if (Array.isArray(pattern)) {
+    if (!isIterable(matchable)) return None;
 
-      if (pattern instanceof RegExp) {
-        return matchNearLiteral(pattern, matchable);
-      }
-
-      if (Array.isArray(pattern)) {
-        if (!isIterable(matchable)) return None;
-
-        return matchArrayObject(pattern, iter(matchable), cache);
-      }
-
-      if (!isObject(matchable)) return None;
-
-      return matchObject(pattern, matchable, cache);
-    }
-
-    default: {
-      return matchNearLiteral(pattern, matchable);
-    }
+    return matchArrayObject(pattern, iter(matchable), cache);
   }
+
+  if (!isObject(matchable)) return None;
+
+  for (const key in pattern) if (!(key in matchable)) return None;
+
+  return matchObject(pattern, matchable, cache);
 }
 
 export function isMatcher(value: {}): value is Matchable {
@@ -158,8 +170,14 @@ function invokeCustomMatcher<T, U>(
   return result.value;
 }
 
-export function isIdentifier(object: object): object is Identifier {
-  return identifier in object;
+export function isIdentifierPattern(
+  pattern:
+    | IdentifierPattern
+    | RegExp
+    | ObjectPattern
+    | ArrayPattern,
+): pattern is IdentifierPattern {
+  return !!pattern && identifier in pattern;
 }
 
 export function isRest(object: object): object is Rest {
@@ -171,15 +189,7 @@ export function matchElement(
   matchable: unknown,
   cache: Cache,
 ): Option<KeyValue> {
-  if (isObject(pattern)) {
-    if (isIdentifier(pattern)) {
-      const key = pattern[identifier];
-
-      return Some.of({ [key]: matchable });
-    } else if (isRest(pattern)) {
-      return Some.of({});
-    }
-  }
+  if (isObject(pattern) && isRest(pattern)) return Some.of({});
 
   return matchPattern(pattern, matchable, cache);
 }

@@ -43,7 +43,9 @@ export type NearLiteralPattern =
 
 export type ArrayPattern = PatternItem[] | [...PatternItem[], Rest];
 
-export type ObjectPattern = { [k: string]: Pattern } | Rest;
+export type ObjectPattern<T extends string = string> =
+  | { [k: T]: Pattern }
+  | Rest;
 
 export type InterpolationPattern = Matchable;
 
@@ -53,7 +55,7 @@ export interface IdentifierPattern<T extends string = string> {
   [identifier]: T;
 }
 
-export interface Rest<T extends string = string> {
+export interface Rest<T extends string | void = string> {
   [rest]: T;
 }
 
