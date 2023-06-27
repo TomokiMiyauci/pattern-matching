@@ -21,7 +21,7 @@ export interface Matcher<T, M, R> {
   (this: T, matchable: M): MatchResult<R>;
 }
 
-export interface Matchable<T = unknown, R = unknown> {
+export interface CustomMatcher<T = unknown, R = unknown> {
   [matcher]: (value: T) => MatchResult<R>;
 }
 
@@ -47,7 +47,7 @@ export type ObjectPattern<T extends string = string> =
   | { [k in T]: Pattern }
   | Rest;
 
-export type InterpolationPattern = Matchable;
+export type InterpolationPattern = CustomMatcher;
 
 export type PatternItem = Pattern | IdentifierPattern<string>;
 
