@@ -8,8 +8,8 @@ import { insert, isIterable, isObject } from "./deps.ts";
 import type {
   ArrayPattern,
   Cache,
+  CustomMatcher,
   IdentifierPattern,
-  Matchable,
   NearLiteralPattern,
   ObjectPattern,
   Pattern,
@@ -152,7 +152,7 @@ export function matchPattern(
   return matchObject(pattern, matchable as Record<string, unknown>, cache);
 }
 
-export function isMatcher(value: {}): value is Matchable {
+export function isMatcher(value: {}): value is CustomMatcher {
   return matcher in value &&
     typeof value[matcher] === "function";
 }
@@ -160,7 +160,7 @@ export function isMatcher(value: {}): value is Matchable {
 const notMatched = {};
 
 function invokeCustomMatcher<T, U>(
-  val: Matchable<T, U>,
+  val: CustomMatcher<T, U>,
   matchable: T,
 ): U | typeof notMatched {
   const result = val[matcher](matchable);
