@@ -6,11 +6,12 @@ import { createMatchResult } from "./utils.ts";
 import { matchPattern } from "./pattern.ts";
 import type {
   ArrayPattern,
-  Identifier,
+  IdentifierPattern,
   MatchedResult,
   Matcher,
   ObjectPattern,
   Pattern,
+  Rest,
 } from "./types.ts";
 
 export function whether<T, R, A extends T = T>(
@@ -43,30 +44,26 @@ export function otherwise<T, R>(
 }
 
 export type Binding<T, P extends Pattern> = UnionToIntersection<_Binding<T, P>>;
-export type _Binding<T, P extends Pattern> = P extends string ? never
-  : P extends RegExp ? Record<string, string>
-  : P extends ObjectPattern ? {
-      [k in keyof P]: P[k] extends Identifier ? { [key in k]: Get<T, k> }
-        : P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
-        : never;
-    }[keyof P]
-  : P extends ArrayPattern ?
-      | {
-        [
-          k in keyof P as P[k] extends Identifier<infer U extends string> ? U
-            : never
-        ]: Get<T, k>;
-      }
+export type _Binding<T, P extends Pattern> = P extends
+  IdentifierPattern<infer U> ? { [k in U]: T }
+  : P extends RegExp ? { [k: string]: string }
+  : P extends ObjectPattern ?
       | {
         [k in keyof P]: P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
           : never;
-      }[number]
+      }[keyof P]
+      | (P extends Rest<infer U extends string> ? { [k in U]: Omit<T, keyof P> }
+        : never)
+  : P extends ArrayPattern ? {
+      [k in keyof P]: P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
+        : never;
+    }[number]
   : never;
 
 type Get<T, K extends PropertyKey> = T extends Record<K, unknown> ? T[K]
   : unknown;
 
-export function when<T, P extends Pattern<unknown, unknown>, U>(
+export function when<T, const P extends Pattern, U>(
   pattern: P,
   callback: (this: T, binding: Binding<T, P>) => U,
 ): Matcher<T, U> {
