@@ -3,7 +3,7 @@
 
 import { identifier, rest } from "./constants.ts";
 import type {
-  Identifier,
+  IdentifierPattern,
   MatchedResult,
   MatchResult,
   Rest,
@@ -44,7 +44,7 @@ export function matchConstructorInstance<T extends object>(
 
 const SPREAD = "...";
 
-export const _: BindingBuilder & Identifier<undefined> = ((name: string) => {
+export const _: BindingBuilder = ((name: string) => {
   if (name.startsWith(SPREAD)) {
     const restStr = name.slice(SPREAD.length);
     const value = restStr || undefined;
@@ -53,18 +53,15 @@ export const _: BindingBuilder & Identifier<undefined> = ((name: string) => {
   }
 
   return { [identifier]: name };
-}) as
-  & BindingBuilder
-  & Identifier<undefined>;
+}) as BindingBuilder;
 
 export interface BindingBuilder {
   <const T extends string>(
     name: T,
-  ): T extends `...${infer U}` ? U extends "" ? Rest<undefined> : Rest<U>
-    : Identifier<T>;
+  ): T extends `...${infer U}` ? U extends "" ? Rest<void> : Rest<U>
+    : IdentifierPattern<T>;
+  get rest(): typeof rest;
 }
-
-_[identifier] = undefined;
 
 export type Option<T> = Some<T> | None;
 
@@ -113,4 +110,20 @@ export function from<T>(input: unknown, value: T): Option<T> {
 
 export function iter<T>(iterable: Iterable<T>): Iterator<T> {
   return iterable[Symbol.iterator]();
+}
+
+export function omit<T, K extends string>(
+  obj: T,
+  keys: Iterable<K>,
+): Omit<T, K> {
+  const set = new Set<unknown>(keys);
+  const newObj: Record<string, unknown> = {};
+
+  for (const key in obj) {
+    if (!set.has(key)) {
+      newObj[key] = obj[key];
+    }
+  }
+
+  return newObj as Omit<T, K>;
 }
