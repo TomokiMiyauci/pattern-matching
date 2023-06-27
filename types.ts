@@ -5,15 +5,19 @@ import { identifier, matcher, rest } from "./constants.ts";
 
 export type MatchResult<T> = MatchedResult<T> | UnmatchedResult;
 
-export interface MatchedResult<T = unknown> {
-  /** If the match clause matched. */
+interface CommonMatchResult {
+  /** If the match arm matched. */
+  matched: boolean;
+}
+
+export interface MatchedResult<T = unknown> extends CommonMatchResult {
   matched: true;
 
   /** The matched value. */
   value: T;
 }
 
-export interface UnmatchedResult {
+export interface UnmatchedResult extends CommonMatchResult {
   matched: false;
 }
 
