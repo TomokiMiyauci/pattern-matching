@@ -13,7 +13,6 @@ export {
   spy,
 } from "https://deno.land/std@0.190.0/testing/mock.ts";
 export {
-  type Assert,
   assertType,
   type IsExact,
 } from "https://deno.land/std@0.190.0/testing/types.ts";
