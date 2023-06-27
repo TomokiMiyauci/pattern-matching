@@ -1,6 +1,6 @@
 # pattern-matching
 
-Syntax-free pattern matching, based on TC39
+Syntax-free pattern matching, feature parity with TC39
 [proposal-pattern-matching](https://github.com/tc39/proposal-pattern-matching).
 
 This project provides syntax-independent, **type-safe** pattern matching tools.
