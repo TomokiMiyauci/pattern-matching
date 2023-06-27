@@ -2,7 +2,6 @@
 // This module is browser compatible.
 
 import { isObject as isObjectType } from "https://deno.land/x/isx@1.4.0/is_object.ts";
-
 import { isFunction } from "https://deno.land/x/isx@1.4.0/is_function.ts";
 export { isRegExp } from "https://deno.land/x/isx@1.4.0/is_reg_exp.ts";
 export { isIterable } from "https://deno.land/x/isx@1.4.0/is_iterable.ts";
