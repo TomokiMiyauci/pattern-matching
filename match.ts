@@ -8,7 +8,7 @@ export function match<const T>(
   matchable: T,
 ): <R>(
   ...matchers: [
-    ...Matcher<T, R>[],
+    ...Matcher<Cache, T, R>[],
     (this: Cache, matchable: T) => MatchedResult<R>,
   ]
 ) => R {

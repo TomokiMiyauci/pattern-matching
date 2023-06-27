@@ -17,8 +17,8 @@ export interface UnmatchedResult {
   matched: false;
 }
 
-export interface Matcher<T, R> {
-  (this: Cache, matchable: T): MatchResult<R>;
+export interface Matcher<T, M, R> {
+  (this: T, matchable: M): MatchResult<R>;
 }
 
 export interface Matchable<T = unknown, R = unknown> {
@@ -44,7 +44,7 @@ export type NearLiteralPattern =
 export type ArrayPattern = PatternItem[] | [...PatternItem[], Rest];
 
 export type ObjectPattern<T extends string = string> =
-  | { [k: T]: Pattern }
+  | { [k in T]: Pattern }
   | Rest;
 
 export type InterpolationPattern = Matchable;

@@ -1,34 +1,36 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { UnionToIntersection } from "./deps.ts";
+import { isObjectType, UnionToIntersection } from "./deps.ts";
 import { createMatchResult } from "./utils.ts";
 import { matchPattern } from "./pattern.ts";
 import type {
   ArrayPattern,
+  Cache,
   IdentifierPattern,
   MatchedResult,
   Matcher,
+  MatchResult,
   ObjectPattern,
   Pattern,
   Rest,
 } from "./types.ts";
 
-export function whether<T, R, A extends T = T>(
-  predicate: (matchable: T) => matchable is A,
-  callback: (matchable: A) => R,
-): Matcher<T, R>;
-export function whether<T, R>(
-  predicate: (matchable: T) => boolean,
-  callback: (matchable: T) => R,
-): Matcher<T, R>;
-export function whether<T, R>(
-  predicate: (matchable: T) => boolean,
-  callback: (matchable: T) => R,
-): Matcher<T, R> {
-  return (matchable) => {
-    if (predicate(matchable)) {
-      const result = callback(matchable);
+export function whether<T, M, R, A extends M = M>(
+  predicate: (this: T, matchable: M) => matchable is A,
+  callback: (this: T, matchable: A) => R,
+): Matcher<T, M, R>;
+export function whether<T, M, R>(
+  predicate: (this: T, matchable: M) => boolean,
+  callback: (this: T, matchable: M) => R,
+): Matcher<T, M, R>;
+export function whether<T, M, R>(
+  predicate: (this: T, matchable: M) => boolean,
+  callback: (this: T, matchable: M) => R,
+): Matcher<T, M, R> {
+  return function (matchable: M) {
+    if (predicate.call(this, matchable)) {
+      const result = callback.call(this, matchable);
 
       return createMatchResult(true, result);
     }
@@ -65,16 +67,19 @@ type Get<T, K extends PropertyKey> = T extends Record<K, unknown> ? T[K]
 
 export function when<T, const P extends Pattern, U>(
   pattern: P,
-  callback: (this: T, binding: Binding<T, P>) => U,
-): Matcher<T, U> {
+  callback: (this: T, binding: Binding<T, P>) => U | MatchResult<U>,
+): Matcher<Cache, T, U> {
   return function (matchable) {
     const result = matchPattern(pattern, matchable, this);
 
     if (result.isNone()) return createMatchResult(false);
 
-    return createMatchResult(
-      true,
-      callback.call(matchable, result.get as Binding<T, P>),
-    );
+    const maybeResult = callback.call(matchable, result.get as Binding<T, P>);
+
+    if (isObjectType(maybeResult) && "matched" in maybeResult) {
+      return maybeResult;
+    }
+
+    return createMatchResult(true, maybeResult);
   };
 }
