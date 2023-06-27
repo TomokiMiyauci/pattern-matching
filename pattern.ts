@@ -149,7 +149,7 @@ export function matchPattern(
 
   for (const key in pattern) if (!(key in matchable)) return None;
 
-  return matchObject(pattern, matchable, cache);
+  return matchObject(pattern, matchable as Record<string, unknown>, cache);
 }
 
 export function isMatcher(value: {}): value is Matchable {
