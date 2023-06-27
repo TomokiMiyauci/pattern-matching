@@ -1,0 +1,22 @@
+{
+  "version": "2",
+  "remote": {
+    "https://deno.land/std@0.190.0/fmt/colors.ts": "d67e3cd9f472535241a8e410d33423980bec45047e343577554d3356e1f0ef4e",
+    "https://deno.land/std@0.190.0/testing/_diff.ts": "1a3c044aedf77647d6cac86b798c6417603361b66b54c53331b312caeb447aea",
+    "https://deno.land/std@0.190.0/testing/_format.ts": "a69126e8a469009adf4cf2a50af889aca364c349797e63174884a52ff75cf4c7",
+    "https://deno.land/std@0.190.0/testing/_test_suite.ts": "30f018feeb3835f12ab198d8a518f9089b1bcb2e8c838a8b615ab10d5005465c",
+    "https://deno.land/std@0.190.0/testing/asserts.ts": "e16d98b4d73ffc4ed498d717307a12500ae4f2cbe668f1a215632d19fcffc22f",
+    "https://deno.land/std@0.190.0/testing/bdd.ts": "59f7f7503066d66a12e50ace81bfffae5b735b6be1208f5684b630ae6b4de1d0",
+    "https://deno.land/std@0.190.0/testing/mock.ts": "220ed9b8151cb2cac141043d4cfea7c47673fab5d18d1c1f0943297c8afb5d13",
+    "https://deno.land/std@0.190.0/testing/types.ts": "6832887bea73ee3549dda953a8df41f8bfa8790219ab56a3b94b984a71a3b3e9",
+    "https://deno.land/x/isx@1.4.0/is_function.ts": "2342e0c44b472f3f39af892049ca28ce63141e3bab9d436da42e3714ddcbd9e3",
+    "https://deno.land/x/isx@1.4.0/is_iterable.ts": "1b40711736a8f107853ad3a340e6a5a414fa632f601ca4b981e8973cb8e43247",
+    "https://deno.land/x/isx@1.4.0/is_null.ts": "02b30255073843d001e715a04382f1d6aebd77ed5506ffbb44bf77b9e20ebf7d",
+    "https://deno.land/x/isx@1.4.0/is_object.ts": "46b8d6733ab860beca23533acab82996dc0e7cad0b6da5582e746af1a17c5f58",
+    "https://deno.land/x/isx@1.4.0/is_reg_exp.ts": "5dedcadfec09d899be13b336defbd3375956d48c5775972fbf57db9d857a8fa6",
+    "https://deno.land/x/upsert@1.2.0/class.ts": "8dec320c723404492299d1f79c582a01f401d6e131133b0d577f2d0ae61330a1",
+    "https://deno.land/x/upsert@1.2.0/emplace.ts": "ab37efe3d179feff2a430eb27d9bedc93a55357a9f5a79f8fdb1870b99ef7e7e",
+    "https://deno.land/x/upsert@1.2.0/mixin.ts": "6805b1c510729d7d3be9e2dee91184ab93a42d87df0175c1b3e6a3450f2ba9f3",
+    "https://deno.land/x/upsert@1.2.0/mod.ts": "d324c1508623a787a9214a59b5ff27db2ad88b7b5d8ccba4447459c02c7990f1"
+  }
+}
