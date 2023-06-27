@@ -25,33 +25,35 @@ export interface Matchable<T = unknown, R = unknown> {
   [matcher]: (value: T) => MatchResult<R>;
 }
 
-export type Pattern<T = unknown, R = unknown> =
+export type Pattern =
+  | InterpolationPattern
+  | NearLiteralPattern
+  | IdentifierPattern
+  | ObjectPattern
+  | ArrayPattern;
+
+export type NearLiteralPattern =
   | string
   | bigint
   | number
   | boolean
   | null
   | undefined
-  | RegExp
-  | ObjectPattern
-  | ArrayPattern
-  | Matchable<T, R>;
+  | RegExp;
 
 export type ArrayPattern = PatternItem[] | [...PatternItem[], Rest];
 
-export type ObjectPattern = { [k: string]: Pattern | Identifier };
+export type ObjectPattern = { [k: string]: Pattern } | Rest;
 
-export type PatternItem = Pattern | Identifier<string>;
+export type InterpolationPattern = Matchable;
 
-export interface LazyPattern<T, R> {
-  (matchable: unknown): Pattern<T, R>;
-}
+export type PatternItem = Pattern | IdentifierPattern<string>;
 
-export interface Identifier<T extends string | undefined = string | undefined> {
+export interface IdentifierPattern<T extends string = string> {
   [identifier]: T;
 }
 
-export interface Rest<T extends string | undefined = string | undefined> {
+export interface Rest<T extends string = string> {
   [rest]: T;
 }
 
