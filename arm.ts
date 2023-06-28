@@ -6,7 +6,7 @@ import { createMatchResult } from "./utils.ts";
 import { matchPattern } from "./pattern.ts";
 import type {
   ArrayPattern,
-  Cache,
+  CacheGroup,
   IdentifierPattern,
   MatchedResult,
   Matcher,
@@ -68,7 +68,7 @@ type Get<T, K extends PropertyKey> = T extends Record<K, unknown> ? T[K]
 export function when<T, const P extends Pattern, U>(
   pattern: P,
   callback: (this: T, binding: Binding<T, P>) => U | MatchResult<U>,
-): Matcher<Cache, T, U> {
+): Matcher<CacheGroup, T, U> {
   return function (matchable) {
     const result = matchPattern(pattern, matchable, this);
 

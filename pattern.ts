@@ -4,10 +4,10 @@
 // deno-lint-ignore-file ban-types
 
 import { identifier, matcher, rest } from "./constants.ts";
-import { insert, isIterable, isObject } from "./deps.ts";
+import { insert, isArray, isIterable, isObject } from "./deps.ts";
 import type {
   ArrayPattern,
-  Cache,
+  CacheGroup,
   CustomMatcher,
   IdentifierPattern,
   NearLiteralPattern,
@@ -51,9 +51,13 @@ export function matchIdentifier<T extends string, U>(
 export function matchArrayObject(
   pattern: ArrayPattern,
   matchable: Iterator<unknown>,
-  cache: Cache<object, IteratorResult<unknown>>,
+  cache: CacheGroup<object, Map<unknown, IteratorResult<unknown>>>,
 ): Option<KeyValue> {
-  const map = insert(cache, matchable, () => new Map());
+  const map = insert(cache, matchable, (iterator, cache) => {
+    cache.iterators.add(iterator);
+
+    return new Map();
+  });
   const handler = () => matchable.next();
   const record = new RecordMap();
 
@@ -81,7 +85,7 @@ export function matchArrayObject(
 export function matchObject<T extends string>(
   pattern: ObjectPattern<T>,
   matchable: Record<T, unknown>,
-  cache: Cache,
+  cache: CacheGroup,
 ): Option<KeyValue> {
   const map = insert(cache, matchable, () => new Map());
   const record = new RecordMap();
@@ -123,7 +127,7 @@ export function hasRestPattern(
 export function matchPattern(
   pattern: Pattern,
   matchable: unknown,
-  cache: Cache,
+  cache: CacheGroup,
 ): Option<KeyValue> {
   if (!isObject(pattern)) return matchNearLiteral(pattern, matchable);
 
@@ -139,7 +143,7 @@ export function matchPattern(
 
   if (pattern instanceof RegExp) return matchNearLiteral(pattern, matchable);
 
-  if (Array.isArray(pattern)) {
+  if (isArray(pattern)) {
     if (!isIterable(matchable)) return None;
 
     return matchArrayObject(pattern, iter(matchable), cache);
@@ -187,7 +191,7 @@ export function isRest(object: object): object is Rest {
 export function matchElement(
   pattern: PatternItem | Rest,
   matchable: unknown,
-  cache: Cache,
+  cache: CacheGroup,
 ): Option<KeyValue> {
   if (isObject(pattern) && isRest(pattern)) return Some.of({});
 

@@ -66,7 +66,11 @@ export interface Rest<T extends string | void = string> {
 }
 
 // deno-lint-ignore ban-types no-explicit-any
-export type Cache<K extends object = object, V = any> = WeakMap<
-  K,
-  Map<unknown, V>
->;
+export class CacheGroup<K extends object = object, V = any>
+  extends WeakMap<K, V> {
+  #iterators: Set<Iterator<unknown>> = new Set();
+
+  get iterators(): Set<Iterator<unknown>> {
+    return this.#iterators;
+  }
+}

@@ -12,7 +12,7 @@ import {
   matchObject,
 } from "./pattern.ts";
 import { assert, assertEquals, describe, it } from "./_dev_deps.ts";
-import { IdentifierPattern } from "./types.ts";
+import { CacheGroup, type IdentifierPattern } from "./types.ts";
 
 type Primitive = string | bigint | number | boolean | null | undefined;
 
@@ -91,7 +91,7 @@ describe("matchElement", () => {
       const result = matchElement(
         pattern,
         pattern,
-        new WeakMap(),
+        new CacheGroup(),
       );
 
       assert(result.isSome());
@@ -110,7 +110,7 @@ describe("matchElement", () => {
       const result = matchElement(
         pattern,
         matchable,
-        new WeakMap(),
+        new CacheGroup(),
       );
 
       assert(result.isSome());
@@ -124,7 +124,7 @@ describe("matchArrayObject", () => {
     function* gen() {}
     const iterator = iter(gen());
 
-    const cache = new WeakMap<object, Map<PropertyKey, any>>();
+    const cache = new CacheGroup<object, Map<PropertyKey, any>>();
     const result = matchArrayObject([], iterator, cache);
 
     assert(result.isSome());
@@ -143,7 +143,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new WeakMap<object, Map<PropertyKey, any>>();
+    const cache = new CacheGroup<object, Map<PropertyKey, any>>();
     const result = matchArrayObject([0, 1], iterator, cache);
 
     assert(result.isSome());
@@ -164,7 +164,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new WeakMap<object, Map<PropertyKey, any>>();
+    const cache = new CacheGroup<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
       [0, { [identifier]: "1" }],
       iterator,
@@ -184,7 +184,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new WeakMap<object, Map<PropertyKey, any>>();
+    const cache = new CacheGroup<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
       [, 1, ,],
       iterator,
@@ -202,7 +202,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new WeakMap<object, Map<PropertyKey, any>>();
+    const cache = new CacheGroup<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
       [/(?<a>a)/, /(?<a>b)/],
       iterator,
@@ -220,7 +220,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new WeakMap<object, Map<PropertyKey, any>>();
+    const cache = new CacheGroup<object, Map<PropertyKey, any>>();
     const result = matchArrayObject(
       [undefined],
       iterator,
@@ -237,7 +237,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new WeakMap<object, Map<PropertyKey, any>>();
+    const cache = new CacheGroup<object, Map<PropertyKey, any>>();
     const result = matchArrayObject([0, 1], iterator, cache);
 
     assert(result.isNone());
@@ -257,7 +257,7 @@ describe("matchArrayObject", () => {
 
     const iterator = iter(gen());
 
-    const cache = new WeakMap<object, Map<PropertyKey, any>>();
+    const cache = new CacheGroup<object, Map<PropertyKey, any>>();
     const result = matchArrayObject([0], iterator, cache);
 
     assert(result.isNone());
@@ -272,7 +272,7 @@ describe("matchArrayObject", () => {
 describe("matchObject", () => {
   it("should return Some and cache matchable", () => {
     const matchable = {};
-    const cache = new WeakMap();
+    const cache = new CacheGroup();
     const result = matchObject({}, matchable, cache);
 
     assert(result.isSome());
@@ -281,7 +281,7 @@ describe("matchObject", () => {
   });
 
   it("should", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 0 };
     const result = matchObject({ a: 0 }, matchable, cache);
 
@@ -293,7 +293,7 @@ describe("matchObject", () => {
   });
 
   it("should capture with property key name", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 0 };
     const result = matchObject(
       { a: { [identifier]: "a" } },
@@ -309,7 +309,7 @@ describe("matchObject", () => {
   });
 
   it("should capture with named identifier", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 0 };
     const result = matchObject(
       { a: { [identifier]: "b" } },
@@ -325,7 +325,7 @@ describe("matchObject", () => {
   });
 
   it("should capture nested property and cache it", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const nest2 = { c: "" };
     const nest = { b: nest2 };
     const matchable = { a: nest };
@@ -347,7 +347,7 @@ describe("matchObject", () => {
   });
 
   it("should override bindings", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 0, b: { a: 1 } };
     const result = matchObject(
       { a: { [identifier]: "a" }, b: { a: { [identifier]: "a" } } },
@@ -360,7 +360,7 @@ describe("matchObject", () => {
   });
 
   it("should return None if the property does not match", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 1 };
     const result = matchObject({ a: 0 }, matchable, cache);
 
@@ -372,7 +372,7 @@ describe("matchObject", () => {
   });
 
   it("should expose all properties as binding, it should not cache", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 1, b: 2 };
     const result = matchObject({ [rest]: "" }, matchable, cache);
 
@@ -384,7 +384,7 @@ describe("matchObject", () => {
   });
 
   it("should expose rest of binding", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 1, b: 2, c: 3 };
     const result = matchObject({ a: 1, [rest]: "rest" }, matchable, cache);
 
@@ -393,7 +393,7 @@ describe("matchObject", () => {
   });
 
   it("should expose rest and identifier binding and", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 1, b: 2, c: 3 };
     const result = matchObject(
       { a: { [identifier]: "a" }, [rest]: "rest" },
@@ -406,7 +406,7 @@ describe("matchObject", () => {
   });
 
   it("should expose empty rest binding", () => {
-    const cache = new WeakMap<object, Map<unknown, unknown>>();
+    const cache = new CacheGroup<object, Map<unknown, unknown>>();
     const matchable = { a: 1, b: 2, c: 3 };
     const result = matchObject(
       { a: 1, b: 2, c: 3, [rest]: "rest" },
@@ -419,7 +419,7 @@ describe("matchObject", () => {
   });
 
   // it("should not cache if matchable does not have property", () => {
-  //   const cache = new WeakMap<object, Map<unknown, unknown>>();
+  //   const cache = new CacheGroup<object, Map<unknown, unknown>>();
   //   const matchable = { a: 0 };
   //   const result = matchObject({ a: 0, b: 1 }, matchable, cache);
 
