@@ -108,10 +108,6 @@ export function from<T>(input: unknown, value: T): Option<T> {
   return None;
 }
 
-export function iter<T>(iterable: Iterable<T>): Iterator<T> {
-  return iterable[Symbol.iterator]();
-}
-
 export function omit<T, K extends string>(
   obj: T,
   keys: Iterable<K>,

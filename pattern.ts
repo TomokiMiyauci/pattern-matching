@@ -11,6 +11,7 @@ import {
   isIterable,
   isObject,
   isString,
+  iter,
   last,
 } from "./deps.ts";
 import type {
@@ -24,7 +25,7 @@ import type {
   Rest,
 } from "./types.ts";
 import { sameValue } from "./ecma.ts";
-import { from, generate, iter, None, omit, Option, Some } from "./utils.ts";
+import { from, generate, None, omit, Option, Some } from "./utils.ts";
 
 export type KeyValue = Record<string, unknown>;
 
