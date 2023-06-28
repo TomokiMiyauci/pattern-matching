@@ -118,6 +118,7 @@ assertType<IsExact<typeof result, string>>(true);
 ## Documentation
 
 - [Pattern](docs/pattern.md)
+- [Compliance with specification](docs/compliance.md)
 
 ## API
 
