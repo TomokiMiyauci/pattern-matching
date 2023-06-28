@@ -133,3 +133,13 @@ export function closeIterator<T>(
 ): IteratorResult<T> | undefined {
   return iterator.return?.();
 }
+
+export function* generate<T>(iterator: Iterator<T>): Generator<T> {
+  do {
+    const result = iterator.next();
+
+    if (result.done) break;
+
+    yield result.value;
+  } while (true);
+}

@@ -5,6 +5,8 @@ import { isObject as isObjectType } from "https://deno.land/x/isx@1.4.0/is_objec
 import { isFunction } from "https://deno.land/x/isx@1.4.0/is_function.ts";
 export { isRegExp } from "https://deno.land/x/isx@1.4.0/is_reg_exp.ts";
 export { isIterable } from "https://deno.land/x/isx@1.4.0/is_iterable.ts";
+export { isString } from "https://deno.land/x/isx@1.4.0/is_string.ts";
+export { isArray } from "https://deno.land/x/isx@1.4.0/is_array.ts";
 export { insert } from "https://deno.land/x/upsert@1.2.0/mod.ts";
 
 export { isObjectType };
@@ -26,3 +28,13 @@ export type UnionToIntersection<U> =
   // deno-lint-ignore no-explicit-any
   (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I
     : never;
+
+export function last<T>(
+  indexable: { length: number; [k: number]: T },
+): T | undefined {
+  return indexable[indexable.length - 1];
+}
+
+export function head<T>(array: readonly T[]): T[] {
+  return array.slice(0, -1);
+}

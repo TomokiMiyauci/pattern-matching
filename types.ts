@@ -46,22 +46,20 @@ export type NearLiteralPattern =
   | RegExp;
 
 export type ArrayPattern =
-  | readonly PatternItem[]
-  | readonly [...PatternItem[], Rest];
+  | readonly Pattern[]
+  | readonly [...Pattern[], Rest];
 
 export type ObjectPattern<T extends string = string> =
   | { [k in T]: Pattern }
-  | Rest;
+  | Rest<string>;
 
 export type InterpolationPattern = CustomMatcher;
-
-export type PatternItem = Pattern | IdentifierPattern<string>;
 
 export interface IdentifierPattern<T extends string = string> {
   [identifier]: T;
 }
 
-export interface Rest<T extends string | void = string> {
+export interface Rest<T extends string | void = string | void> {
   [rest]: T;
 }
 

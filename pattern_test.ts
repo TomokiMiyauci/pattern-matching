@@ -7,12 +7,11 @@ import { iter } from "./utils.ts";
 import {
   KeyValue,
   matchArrayObject,
-  matchElement,
   matchNearLiteral,
   matchObject,
 } from "./pattern.ts";
 import { assert, assertEquals, describe, it } from "./_dev_deps.ts";
-import { CacheGroup, type IdentifierPattern } from "./types.ts";
+import { CacheGroup } from "./types.ts";
 
 type Primitive = string | bigint | number | boolean | null | undefined;
 
@@ -73,48 +72,6 @@ describe("matchNearLiteral", () => {
 
     table.forEach(([pattern, matchable]) => {
       assert(matchNearLiteral(pattern, matchable).isNone());
-    });
-  });
-});
-
-describe("matchElement", () => {
-  it("should return Some({}) if the pattern is primitive and matched", () => {
-    const table: Primitive[] = [
-      "",
-      0,
-      false,
-      null,
-      undefined,
-    ];
-
-    table.forEach((pattern) => {
-      const result = matchElement(
-        pattern,
-        pattern,
-        new CacheGroup(),
-      );
-
-      assert(result.isSome());
-      assertEquals(result.get, {});
-    });
-  });
-
-  it("should return Some with record if the pattern is identifier", () => {
-    const table: [IdentifierPattern<string>, unknown, KeyValue][] = [
-      [{ [identifier]: "abc" }, "", { abc: "" }],
-      [{ [identifier]: "1" }, {}, { 1: {} }],
-      [{ [identifier]: "xxx" }, {}, { xxx: {} }],
-    ];
-
-    table.forEach(([pattern, matchable, keyValue]) => {
-      const result = matchElement(
-        pattern,
-        matchable,
-        new CacheGroup(),
-      );
-
-      assert(result.isSome());
-      assertEquals(result.get, keyValue);
     });
   });
 });
@@ -266,6 +223,85 @@ describe("matchArrayObject", () => {
     assertEquals(cache.get(iterator)?.size, 2);
     assertEquals(cache.get(iterator)?.get(0), { done: false, value: 0 });
     assertEquals(cache.get(iterator)?.get(1), { done: false, value: 1 });
+  });
+
+  it("should return none if item does not match", () => {
+    const cache = new CacheGroup();
+    function* gen() {
+      yield 0;
+    }
+    const iterator = iter(gen());
+    const result = matchArrayObject(
+      [1, { [rest]: undefined }],
+      iterator,
+      cache,
+    );
+
+    assert(result.isNone());
+
+    assert(cache.has(iterator));
+    assertEquals(cache.get(iterator)?.size, 1);
+    assertEquals(cache.get(iterator)?.get(0), { done: false, value: 0 });
+  });
+
+  it("should ignore length matching it has rest pattern", () => {
+    const cache = new CacheGroup();
+    function* gen() {
+      yield 0;
+      yield 1;
+      yield 2;
+    }
+    const iterator = iter(gen());
+    const result = matchArrayObject(
+      [0, { [rest]: undefined }],
+      iterator,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, {});
+
+    assert(cache.has(iterator));
+    assertEquals(cache.get(iterator)?.size, 1);
+    assertEquals(cache.get(iterator)?.get(0), { done: false, value: 0 });
+  });
+
+  it("should bind rest if the rest pattern is named", () => {
+    const cache = new CacheGroup();
+    function* gen() {
+      yield 0;
+      yield 1;
+      yield 2;
+    }
+    const iterator = iter(gen());
+    const result = matchArrayObject(
+      [0, { [rest]: "" }],
+      iterator,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, { "": [1, 2] });
+
+    assert(cache.has(iterator));
+    assertEquals(cache.get(iterator)?.size, 1);
+    assertEquals(cache.get(iterator)?.get(0), { done: false, value: 0 });
+  });
+
+  it("should return some if the rest item is none", () => {
+    const cache = new CacheGroup();
+    function* gen() {
+      yield 0;
+    }
+    const iterator = iter(gen());
+    const result = matchArrayObject(
+      [0, { [rest]: "" }],
+      iterator,
+      cache,
+    );
+
+    assert(result.isSome());
+    assertEquals(result.get, { "": [] });
   });
 });
 

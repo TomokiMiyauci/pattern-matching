@@ -4,7 +4,15 @@
 // deno-lint-ignore-file ban-types
 
 import { identifier, matcher, rest } from "./constants.ts";
-import { insert, isArray, isIterable, isObject } from "./deps.ts";
+import {
+  head,
+  insert,
+  isArray,
+  isIterable,
+  isObject,
+  isString,
+  last,
+} from "./deps.ts";
 import type {
   ArrayPattern,
   CacheGroup,
@@ -13,11 +21,10 @@ import type {
   NearLiteralPattern,
   ObjectPattern,
   Pattern,
-  PatternItem,
   Rest,
 } from "./types.ts";
 import { sameValue } from "./ecma.ts";
-import { from, iter, None, omit, Option, Some } from "./utils.ts";
+import { from, generate, iter, None, omit, Option, Some } from "./utils.ts";
 
 export type KeyValue = Record<string, unknown>;
 
@@ -60,24 +67,42 @@ export function matchArrayObject(
   });
   const handler = () => matchable.next();
   const record = new RecordMap();
+  const lastEl = last(pattern);
+  const hasRest = isObject(lastEl) && isRest(lastEl);
+  const patternWithoutRest =
+    (hasRest ? head(pattern) : pattern) as readonly Pattern[];
 
-  for (const [i, value] of pattern.entries()) {
+  for (const [i, value] of patternWithoutRest.entries()) {
     const iterResult = insert(map, i, handler);
+
     if (iterResult.done) return None;
 
     // Detect empty item and if empty item, pass it.
     if (!Reflect.has(pattern, i)) continue;
 
-    const result = matchElement(value, iterResult.value, cache);
+    const result = matchPattern(value, iterResult.value, cache);
 
     if (result.isNone()) return result;
 
     record.add(result.get);
   }
 
-  const result = insert(map, map.size, handler);
+  if (!hasRest) {
+    const result = insert(map, patternWithoutRest.length, handler);
 
-  if (!result.done) return None;
+    // Not match a length of pattern items and yielding count from matchable.
+    if (!result.done) return None;
+
+    return Some.of(record.get);
+  }
+
+  const maybeName = getRestName(lastEl);
+
+  if (maybeName.isSome()) {
+    const rest = [...generate(matchable)];
+
+    record.set(maybeName.get, rest);
+  }
 
   return Some.of(record.get);
 }
@@ -188,16 +213,6 @@ export function isRest(object: object): object is Rest {
   return rest in object;
 }
 
-export function matchElement(
-  pattern: PatternItem | Rest,
-  matchable: unknown,
-  cache: CacheGroup,
-): Option<KeyValue> {
-  if (isObject(pattern) && isRest(pattern)) return Some.of({});
-
-  return matchPattern(pattern, matchable, cache);
-}
-
 class RecordMap<K extends string, V> {
   #value: Record<K, V>;
   constructor(record?: Record<K, V>) {
@@ -221,4 +236,12 @@ class RecordMap<K extends string, V> {
   get get(): Record<K, V> {
     return this.#value;
   }
+}
+
+function getRestName<T extends string>(restPattern: Rest<T | void>): Option<T> {
+  const name = restPattern[rest];
+
+  if (isString(name)) return Some.of(name);
+
+  return None;
 }
