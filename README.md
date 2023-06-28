@@ -21,6 +21,7 @@ This project provides syntax-independent, **type-safe** pattern matching tools.
 - [Install](#install)
 - [Usage](#usage)
   - [Binding](#binding)
+- [Documentation](#documentation)
 - [API](#api)
 - [Contributing](#contributing)
 - [License](#license)
@@ -113,6 +114,10 @@ const result = match(person)(
 
 assertType<IsExact<typeof result, string>>(true);
 ```
+
+## Documentation
+
+- [Pattern](docs/pattern.md)
 
 ## API
 
