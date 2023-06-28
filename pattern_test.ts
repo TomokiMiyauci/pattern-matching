@@ -2,8 +2,8 @@
 
 // deno-lint-ignore-file ban-types no-explicit-any
 
+import { iter } from "./deps.ts";
 import { identifier, rest } from "./constants.ts";
-import { iter } from "./utils.ts";
 import {
   KeyValue,
   matchArrayObject,

@@ -25,7 +25,7 @@ import type {
   Rest,
 } from "./types.ts";
 import { sameValue } from "./ecma.ts";
-import { from, generate, None, omit, Option, Some } from "./utils.ts";
+import { from, fromIter, None, omit, Option, Some } from "./utils.ts";
 
 export type KeyValue = Record<string, unknown>;
 
@@ -100,7 +100,7 @@ export function matchArrayObject(
   const maybeName = getRestName(lastEl);
 
   if (maybeName.isSome()) {
-    const rest = [...generate(matchable)];
+    const rest = [...fromIter(matchable)];
 
     record.set(maybeName.get, rest);
   }

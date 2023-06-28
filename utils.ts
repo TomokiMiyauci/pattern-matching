@@ -1,6 +1,7 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
+import { isIterable } from "./deps.ts";
 import { identifier, rest } from "./constants.ts";
 import type {
   IdentifierPattern,
@@ -130,12 +131,16 @@ export function closeIterator<T>(
   return iterator.return?.();
 }
 
-export function* generate<T>(iterator: Iterator<T>): Generator<T> {
-  do {
-    const result = iterator.next();
+export function fromIter<T>(
+  iterator: Iterator<T>,
+): IterableIterator<T> | Iterable<T> {
+  if (isIterable<T>(iterator)) return iterator;
 
-    if (result.done) break;
+  const iterable: Iterable<T> = {
+    [Symbol.iterator]() {
+      return iterator;
+    },
+  };
 
-    yield result.value;
-  } while (true);
+  return iterable;
 }
