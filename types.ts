@@ -45,7 +45,9 @@ export type NearLiteralPattern =
   | undefined
   | RegExp;
 
-export type ArrayPattern = PatternItem[] | [...PatternItem[], Rest];
+export type ArrayPattern =
+  | readonly PatternItem[]
+  | readonly [...PatternItem[], Rest];
 
 export type ObjectPattern<T extends string = string> =
   | { [k in T]: Pattern }
