@@ -5,6 +5,8 @@
 
 import { identifier, matcher, rest } from "./constants.ts";
 import {
+  from,
+  fromIter,
   head,
   insert,
   isArray,
@@ -13,6 +15,10 @@ import {
   isString,
   iter,
   last,
+  None,
+  omit,
+  Option,
+  Some,
 } from "./deps.ts";
 import type {
   ArrayPattern,
@@ -25,7 +31,6 @@ import type {
   Rest,
 } from "./types.ts";
 import { sameValue } from "./ecma.ts";
-import { from, fromIter, None, omit, Option, Some } from "./utils.ts";
 
 export type KeyValue = Record<string, unknown>;
 

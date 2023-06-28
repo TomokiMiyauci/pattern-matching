@@ -23,6 +23,10 @@
     "https://deno.land/x/upsert@1.2.0/class.ts": "8dec320c723404492299d1f79c582a01f401d6e131133b0d577f2d0ae61330a1",
     "https://deno.land/x/upsert@1.2.0/emplace.ts": "ab37efe3d179feff2a430eb27d9bedc93a55357a9f5a79f8fdb1870b99ef7e7e",
     "https://deno.land/x/upsert@1.2.0/mixin.ts": "6805b1c510729d7d3be9e2dee91184ab93a42d87df0175c1b3e6a3450f2ba9f3",
-    "https://deno.land/x/upsert@1.2.0/mod.ts": "d324c1508623a787a9214a59b5ff27db2ad88b7b5d8ccba4447459c02c7990f1"
+    "https://deno.land/x/upsert@1.2.0/mod.ts": "d324c1508623a787a9214a59b5ff27db2ad88b7b5d8ccba4447459c02c7990f1",
+    "https://esm.sh/itertools@2.1.1": "88aeec98228dcb96e04e34a78dfe8dceaf775f2abf41cb7142368bf3cc8a3d18",
+    "https://esm.sh/itertools@2.1.1?pin=v126": "88aeec98228dcb96e04e34a78dfe8dceaf775f2abf41cb7142368bf3cc8a3d18",
+    "https://esm.sh/v126/itertools@2.1.1/denonext/itertools.mjs": "4c047b7ef231b19f208914dff100edd4c354ffaf9cf85249914793314ff192e2",
+    "https://esm.sh/v126/itertools@2.1.1/dist/index.d.mts": "ce8f124006f24319e954f89d2ca57e2372ce3b8e0edb16d9aa4a3481663b44f9"
   }
 }

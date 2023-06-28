@@ -2,7 +2,6 @@
 // This module is browser compatible.
 
 import { destLast } from "./deps.ts";
-import { closeIterator } from "./utils.ts";
 import { CacheGroup, MatchedResult, Matcher } from "./types.ts";
 
 export function match<const T>(
@@ -31,4 +30,10 @@ export function match<const T>(
 
     return result;
   };
+}
+
+export function closeIterator<T>(
+  iterator: Iterator<T>,
+): IteratorResult<T> | undefined {
+  return iterator.return?.();
 }
