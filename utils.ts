@@ -127,3 +127,9 @@ export function omit<T, K extends string>(
 
   return newObj as Omit<T, K>;
 }
+
+export function closeIterator<T>(
+  iterator: Iterator<T>,
+): IteratorResult<T> | undefined {
+  return iterator.return?.();
+}
