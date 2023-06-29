@@ -38,7 +38,7 @@ export function last<T>(
   return indexable[indexable.length - 1];
 }
 
-export function head<T>(array: readonly T[]): T[] {
+export function init<T>(array: readonly T[]): T[] {
   return array.slice(0, -1);
 }
 

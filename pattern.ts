@@ -7,7 +7,7 @@ import { identifier, matcher, rest } from "./constants.ts";
 import {
   from,
   fromIter,
-  head,
+  init,
   insert,
   isArray,
   isIterable,
@@ -76,7 +76,7 @@ export function matchArrayObject(
   const lastEl = last(pattern);
   const hasRest = isObject(lastEl) && isRest(lastEl);
   const patternWithoutRest =
-    (hasRest ? head(pattern) : pattern) as readonly Pattern[];
+    (hasRest ? init(pattern) : pattern) as readonly Pattern[];
 
   for (const [i, value] of patternWithoutRest.entries()) {
     const iterResult = insert(map, i, handler);
