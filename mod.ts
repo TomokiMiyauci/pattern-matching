@@ -11,3 +11,11 @@ export { match } from "./match.ts";
 export { otherwise, when, whether } from "./arm.ts";
 export { identifier, matcher, rest } from "./constants.ts";
 export { _ } from "./utils.ts";
+export {
+  CacheGroup,
+  type MatchedResult,
+  type Matcher,
+  type MatchResult,
+  type Pattern,
+  type UnmatchedResult,
+} from "./types.ts";
