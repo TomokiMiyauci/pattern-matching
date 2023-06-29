@@ -116,3 +116,50 @@ export function fromIter<T>(
 
   return iterable;
 }
+
+// if N is negative, convert it to its positive counterpart by the Arr
+type ToPositive<N extends number, Arr extends readonly unknown[]> =
+  `${N}` extends `-${infer P extends number}` ? Slice<Arr, P>["length"]
+    : N;
+
+// get the initial N items of Arr
+type InitialN<
+  Arr extends readonly unknown[],
+  N extends number,
+  _Acc extends readonly unknown[] = [],
+> = _Acc["length"] extends N | Arr["length"] ? _Acc
+  : InitialN<Arr, N, [..._Acc, Arr[_Acc["length"]]]>;
+
+/**
+ * @see https://github.com/type-challenges/type-challenges/issues/22110#issue-1533202988
+ */
+export type Slice<
+  Arr extends readonly unknown[],
+  Start extends number = 0,
+  End extends number = Arr["length"],
+> = InitialN<Arr, ToPositive<End, Arr>> extends
+  [...InitialN<Arr, ToPositive<Start, Arr>>, ...infer Rest] ? Rest
+  : [];
+
+type ParseInt<T extends string> = T extends `${infer Digit extends number}`
+  ? Digit
+  : never;
+type ReverseString<S extends string> = S extends `${infer First}${infer Rest}`
+  ? `${ReverseString<Rest>}${First}`
+  : "";
+type RemoveLeadingZeros<S extends string> = S extends "0" ? S
+  : S extends `${"0"}${infer R}` ? RemoveLeadingZeros<R>
+  : S;
+type InternalMinusOne<
+  S extends string,
+> = S extends `${infer Digit extends number}${infer Rest}`
+  ? Digit extends 0 ? `9${InternalMinusOne<Rest>}`
+  : `${[9, 0, 1, 2, 3, 4, 5, 6, 7, 8][Digit]}${Rest}`
+  : never;
+
+/**
+ * @see https://github.com/type-challenges/type-challenges/issues/13507#issue-1315903507
+ */
+export type MinusOne<T extends number> = ParseInt<
+  RemoveLeadingZeros<ReverseString<InternalMinusOne<ReverseString<`${T}`>>>>
+>;

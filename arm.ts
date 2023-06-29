@@ -1,7 +1,7 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { isObjectType, UnionToIntersection } from "./deps.ts";
+import { isObjectType, MinusOne, Slice, UnionToIntersection } from "./deps.ts";
 import { createMatchResult } from "./utils.ts";
 import { matchPattern } from "./pattern.ts";
 import type {
@@ -49,6 +49,20 @@ export type Binding<T, P extends Pattern> = UnionToIntersection<_Binding<T, P>>;
 export type _Binding<T, P extends Pattern> = P extends
   IdentifierPattern<infer U> ? { [k in U]: T }
   : P extends RegExp ? { [k: string]: string }
+  : P extends ArrayPattern ?
+      | ({
+        [k in keyof P]: P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
+          : never;
+      }[number])
+      | (P extends readonly [...unknown[], infer R extends Rest]
+        ? R extends Rest<infer N extends string> ? {
+            [k in N]: T extends readonly unknown[]
+              ? Slice<T, MinusOne<P["length"]>>
+              : T extends Iterable<infer I> ? I[]
+              : unknown[];
+          }
+        : never
+        : never)
   : P extends ObjectPattern ?
       | {
         [k in keyof P]: P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
@@ -56,10 +70,6 @@ export type _Binding<T, P extends Pattern> = P extends
       }[keyof P]
       | (P extends Rest<infer U extends string> ? { [k in U]: Omit<T, keyof P> }
         : never)
-  : P extends ArrayPattern ? {
-      [k in keyof P]: P[k] extends Pattern ? _Binding<Get<T, k>, P[k]>
-        : never;
-    }[number]
   : never;
 
 type Get<T, K extends PropertyKey> = T extends Record<K, unknown> ? T[K]
