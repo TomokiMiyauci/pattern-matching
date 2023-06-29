@@ -1,3 +1,20 @@
+# [1.0.0-beta.2](https://github.com/TomokiMiyauci/pattern-matching/compare/1.0.0-beta.1...1.0.0-beta.2) (2023-06-29)
+
+
+### Bug Fixes
+
+* **types:** add readonly specifier ([2196b7f](https://github.com/TomokiMiyauci/pattern-matching/commit/2196b7fa98d1416c0a263e873aea4b1574bda62e))
+
+
+### Features
+
+* **arm:** improve type infer for array of rest pattern ([0822198](https://github.com/TomokiMiyauci/pattern-matching/commit/0822198f500879518c7bc3d4234a27336393c6eb))
+* **match:** add closing iterator when matching end ([61de316](https://github.com/TomokiMiyauci/pattern-matching/commit/61de3161aa7c1f26822430208c60de9d4597abab))
+* **mod:** export related types ([c646df0](https://github.com/TomokiMiyauci/pattern-matching/commit/c646df002e38cb5738c06faccdd4b02b90dc17af))
+* **pattern:** support rest pattern in array pattern ([2c6a247](https://github.com/TomokiMiyauci/pattern-matching/commit/2c6a247f4aabe396220fdda94b930aed3ea78139))
+* **types:** rename cache and change interface ([bf33004](https://github.com/TomokiMiyauci/pattern-matching/commit/bf330043a1bc30428bafa01776fef97bd79611a9))
+* **types:** rename interface ([cb36fc0](https://github.com/TomokiMiyauci/pattern-matching/commit/cb36fc016240f6394b3c615f7a00b173fe5af0af))
+
 # 1.0.0-beta.1 (2023-06-27)
 
 
