@@ -1,7 +1,7 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { destLast } from "./deps.ts";
+import { initLast } from "./deps.ts";
 import { CacheGroup, MatchedResult, Matcher } from "./types.ts";
 
 export function match<const T>(
@@ -14,7 +14,7 @@ export function match<const T>(
 ) => R {
   return function (...matchers) {
     const cache = new CacheGroup();
-    const [heads, last] = destLast(matchers);
+    const [heads, last] = initLast(matchers);
 
     const result = (() => {
       for (const matcher of heads) {
