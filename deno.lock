@@ -33,5 +33,16 @@
     "https://esm.sh/itertools@2.1.1?pin=v126": "88aeec98228dcb96e04e34a78dfe8dceaf775f2abf41cb7142368bf3cc8a3d18",
     "https://esm.sh/v126/itertools@2.1.1/denonext/itertools.mjs": "4c047b7ef231b19f208914dff100edd4c354ffaf9cf85249914793314ff192e2",
     "https://esm.sh/v126/itertools@2.1.1/dist/index.d.mts": "ce8f124006f24319e954f89d2ca57e2372ce3b8e0edb16d9aa4a3481663b44f9"
+  },
+  "npm": {
+    "specifiers": {
+      "itertools@2.1.1": "itertools@2.1.1"
+    },
+    "packages": {
+      "itertools@2.1.1": {
+        "integrity": "sha512-T0icRZBQfWSwhdeBvJT3Sg1m3lBOv1RCD2m+vnY7F12sIInidVDLIn5Fbu1/1gAMN8XIjzkDP48ukF7mTRn/fw==",
+        "dependencies": {}
+      }
+    }
   }
 }

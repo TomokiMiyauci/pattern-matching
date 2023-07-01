@@ -10,7 +10,7 @@ import { isIterable } from "https://deno.land/x/isx@1.4.0/is_iterable.ts";
 export { isString } from "https://deno.land/x/isx@1.4.0/is_string.ts";
 export { isArray } from "https://deno.land/x/isx@1.4.0/is_array.ts";
 export { insert } from "https://deno.land/x/upsert@1.2.0/mod.ts";
-export { iter } from "https://esm.sh/itertools@2.1.1?pin=v126";
+export { iter } from "npm:itertools@2.1.1";
 export { head } from "https://deno.land/x/seqtools@1.0.0/head.ts";
 export { last } from "https://deno.land/x/seqtools@1.0.0/last.ts";
 export { init } from "https://deno.land/x/seqtools@1.0.0/init.ts";
