@@ -11,16 +11,12 @@ export { isString } from "https://deno.land/x/isx@1.4.0/is_string.ts";
 export { isArray } from "https://deno.land/x/isx@1.4.0/is_array.ts";
 export { insert } from "https://deno.land/x/upsert@1.2.0/mod.ts";
 export { iter } from "https://esm.sh/itertools@2.1.1?pin=v126";
+export { head } from "https://deno.land/x/seqtools@1.0.0/head.ts";
+export { last } from "https://deno.land/x/seqtools@1.0.0/last.ts";
+export { init } from "https://deno.land/x/seqtools@1.0.0/init.ts";
+export { initLast } from "https://deno.land/x/seqtools@1.0.0/init_last.ts";
 
 export { isIterable, isObjectType };
-export function destLast<T, U>(input: readonly [...readonly T[], U]): [T[], U];
-export function destLast<T>(input: Iterable<T>): [T[], T | undefined];
-export function destLast<T>(input: Iterable<T>): [T[], T | undefined] {
-  const array = [...input];
-  const last = array.pop();
-
-  return [array, last];
-}
 
 // deno-lint-ignore ban-types
 export function isObject(input: unknown): input is object {
@@ -31,16 +27,6 @@ export type UnionToIntersection<U> =
   // deno-lint-ignore no-explicit-any
   (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I
     : never;
-
-export function last<T>(
-  indexable: { length: number; [k: number]: T },
-): T | undefined {
-  return indexable[indexable.length - 1];
-}
-
-export function init<T>(array: readonly T[]): T[] {
-  return array.slice(0, -1);
-}
 
 export type Option<T> = Some<T> | None;
 
